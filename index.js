@@ -1,11 +1,17 @@
+const express = require('express')
+const mongoose = require('mongoose')
+const dotenv = require('dotenv')
+const Joi = require('joi')
+let cors = require('cors')
+let multer = require('multer')
+const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
-const express = require("express")
-const cors = require('cors');
-const { Sequelize } = require('sequelize');
-
 let app = express();
 
+app.use(express.static(__dirname + '/public'));
+app.use('/uploads', express.static('uploads'));
 
+app.use(cors())
 
 const authMiddleware = require('./middlewares/authMiddleware');
 
@@ -16,19 +22,36 @@ const { customer_auth_route, customer_product_route } = require('./routes/custom
 // app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-app.use(cors());
 
-
-const db = require("./models");
-
-//Check db connection status
-db.sequelize.authenticate()
+// Mongoose options
+const mongooseOptions = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+};
+mongoose.set("strictQuery", false);
+// Connect to the MongoDB server
+mongoose.connect(process.env.DB_CONNECT, mongooseOptions)
     .then(() => {
-        console.log('Database connection successful.');
+        console.log('Connected to MongoDB');
     })
-    .catch(err => {
-        console.error('Unable to connect to the database:', err);
+    .catch(error => {
+        console.error('Error connecting to MongoDB:', error);
     });
+
+// Create a reference to the connection
+const db = mongoose.connection;
+
+// Event listeners for connection events
+db.on('error', error => {
+    console.error('MongoDB connection error:', error);
+});
+db.once('open', (error) => {
+    console.log('MongoDB connection established', error);
+});
+db.on('disconnected', (error) => {
+    console.log('MongoDB disconnected', error);
+});
+
 
 //! Auth routes--------------------------------------->
 app.use('/admin/api/v1/auth', admin_auth_route);
@@ -45,6 +68,5 @@ app.get("/", function (request, response) {
 })
 
 app.listen(process.env.PORT, function () {
-    console.log(process.env.PORT)
     console.log("Started application on port %d", process.env.PORT)
 });

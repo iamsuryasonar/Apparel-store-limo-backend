@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const { Admin, Customer } = require('../models'); // Import Admin and Customer models
-
+const Admin = require('../models/Admin');
+const Customer = require('../models/Customer');
 // Middleware to authenticate Admin and Customer based on their role
 const authenticate = async (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -12,19 +12,20 @@ const authenticate = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+        console.log(decodedToken)
 
         if (decodedToken.role === 'ADMIN') {
             // If role is admin, find the admin by id
-            const admin = await Admin.findByPk(decodedToken.id);
+            const admin = await Admin.findById(decodedToken._id);
             if (!admin) {
                 return res.status(401).json({ message: 'Invalid token' });
             }
 
             req.user = admin; // Set the user object on the request
-        } else if (decodedToken.role === 'customer') {
+        } else if (decodedToken.role === 'CUSTOMER') {
             // If role is customer, find the customer by id
-            const customer = await Customer.findByPk(decodedToken.id);
+            const customer = await Customer.findById(decodedToken.id);
             if (!customer) {
                 return res.status(401).json({ message: 'Invalid token' });
             }
