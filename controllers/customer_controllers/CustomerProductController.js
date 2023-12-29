@@ -2,7 +2,6 @@ const Product = require('../../models/Product');
 
 exports.getAllProduct = async (req, res) => {
   //todo --- only find products that are published
-  // also get specification with variant, subcategory and brand
 
   try {
     const page = parseInt(req.query.page) || 1; // set default page number to 1 if not provided

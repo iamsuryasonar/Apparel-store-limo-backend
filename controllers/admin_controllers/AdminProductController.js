@@ -1,5 +1,6 @@
 const Product = require('../../models/Product');
 const mongoose = require('mongoose')
+
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
