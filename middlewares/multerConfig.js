@@ -1,24 +1,30 @@
 const multer = require('multer');
+// const crypto = require("crypto");
 
-// Define multer storage and upload configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './uploads');
-    },
-    filename: function (req, file, cb) {
-        const timestamp = Date.now(); // Get the current timestamp in milliseconds
-        const extension = file.originalname.split('.').pop(); // Get the file extension
-        const originalFilenameWithoutExtension = file.originalname
-            .split('.')
-            .slice(0, -1)
-            .join('.'); // Remove the extension from the original filename
-        const newFilename = `${originalFilenameWithoutExtension}_${timestamp}.${extension}`; // Combine original name, timestamp, and extension
-        cb(null, newFilename);
-    }
-});
+// const storage = multer.diskStorage({
+//     destination: function async(req, file, cb) {
+//         const webpImageBuffer = sharp(file.buffer)
+//             .webp({ quality: 10 })
+//             .toBuffer();
+//         file = webpImageBuffer;
+//         cb(null, './uploads');
+//     },
+//     filename: function (req, file, cb) {
+//         const uuid = crypto.randomBytes(6).toString("hex");
+//         const timestamp = Date.now();
+//         const extension = file.originalname.split('.').pop();
+//         const originalFilenameWithoutExtension = file.originalname
+//             .split('.')
+//             .slice(0, -1)
+//             .join('.'); 
+//         const newFilename = `${originalFilenameWithoutExtension}_${uuid}_${timestamp}.${extension}`; // Combine original name, timestamp, and extension
+//         cb(null, newFilename);
+//     }
+// });
+// const upload = multer({ storage:storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
-const upload = multer({ storage: storage });
 
 module.exports = {
-    upload,
+    upload: upload,
 };

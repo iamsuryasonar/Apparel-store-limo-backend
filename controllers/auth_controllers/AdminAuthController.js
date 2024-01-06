@@ -47,29 +47,30 @@ exports.adminRegistration = async (req, res) => {
 };
 
 exports.adminLogIn = async (req, res) => {
+  console.log(req.body)
   if (!req.body.email) return res.status(400).json({ success: false, message: 'email required!!!' });
   if (!req.body.password) return res.status(400).json({ success: false, message: 'password required!!!' });
 
-  try {
+  // try {
 
-    // check if email exists in the database and get the user's password(data) so that we can compare hashes
-    const admin = await Admin.findOne({ email: req.body.email })
-    if (!admin) return utils.responseHandler(res, 400, 'error', 'Email not found', null);
+  // check if email exists in the database and get the user's password(data) so that we can compare hashes
+  const admin = await Admin.findOne({ email: req.body.email })
+  if (!admin) return utils.responseHandler(res, 400, 'error', 'Email not found', null);
 
-    const matched = await bcrypt.compare(req.body.password, admin.password);
-    if (!matched) return utils.responseHandler(res, 400, 'error', 'Invalid Password', null);
+  const matched = await bcrypt.compare(req.body.password, admin.password);
+  if (!matched) return utils.responseHandler(res, 400, 'error', 'Invalid Password', null);
 
-    // create token using jsonwebtoken library
-    const token = jwt.sign({ _id: admin._id, role: admin.role }, process.env.TOKEN_SECRET)
-    const userData = await Admin.findOne({ email: req.body.email })
-    const userinfo = {
-      'name': userData.name,
-      'email': userData.email,
-    }
-    const response = { ...userinfo, token }
-    utils.responseHandler(res, 200, 'success', 'Admin logged in successfully', response);
-  } catch (error) {
-    utils.responseHandler(res, 500, 'error', 'Internal server error', null);
+  // create token using jsonwebtoken library
+  const token = jwt.sign({ _id: admin._id, role: admin.role, exp: Math.floor(Date.now() / 1000) + 3 * 3600, }, process.env.TOKEN_SECRET,)
+  const userData = await Admin.findOne({ email: req.body.email })
+  const userinfo = {
+    'name': userData.name,
+    'email': userData.email,
   }
+  const response = { ...userinfo, token }
+  utils.responseHandler(res, 200, 'success', 'Admin logged in successfully', response);
+  // } catch (error) {
+  //   utils.responseHandler(res, 500, 'error', 'Internal server error', null);
+  // }
 
 };

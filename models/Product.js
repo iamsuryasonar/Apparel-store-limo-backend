@@ -11,40 +11,29 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 6,
-        maxlength: 255,
-    },
-    image: {
-        type: String,
-        required: true,
     },
     keyword: {
         type: String,
         minlength: 3,
-        maxlength: 255,
     },
     tag: {
         type: String,
         minlength: 3,
         maxlength: 255,
     },
-    mrp: {
-        type: Number,
-        required: true,
-    },
-    selling_price: {
-        type: Number,
-        required: true,
-    },
-    stock: {
-        type: Number,
-        required: true,
-    },
-    status: {
-        type: String,
-        required: true,
-        enum: ['IN-STOCK', 'OUT-STOCK'],
-        default: 'IN-STOCK',
-    },
-});
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+},
+    {
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true },
+    }
+);
+
+productSchema.virtual('colorvariants', {
+    ref: 'ColorVariant',
+    localField: '_id',
+    foreignField: 'product',
+})
+
 
 module.exports = mongoose.model('Product', productSchema);

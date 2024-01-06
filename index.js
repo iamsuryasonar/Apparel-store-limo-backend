@@ -4,6 +4,7 @@ const dotenv = require('dotenv')
 const Joi = require('joi')
 let cors = require('cors')
 let multer = require('multer')
+const bodyParser = require('body-parser');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 let app = express();
@@ -15,13 +16,16 @@ app.use(cors())
 
 const authMiddleware = require('./middlewares/authMiddleware');
 
-const { admin_auth_route, admin_product_route } = require('./routes/admin_routes');
+const { admin_auth_route, admin_product_route, admin_category_route } = require('./routes/admin_routes');
 const { customer_auth_route, customer_product_route } = require('./routes/customer_routes');
 
 
 // app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname + '/public'));
+app.use('/uploads', express.static('uploads'));
 
 // Mongoose options
 const mongooseOptions = {
@@ -59,6 +63,7 @@ app.use('/api/v1/auth', customer_auth_route);
 
 //! Admin routes-------------------------------------->
 app.use('/admin/api/v1/product', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), admin_product_route);
+app.use('/admin/api/v1/category', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), admin_category_route);
 
 //! Customer routes----------------------------------->
 app.use('/api/v1/product', customer_product_route);
