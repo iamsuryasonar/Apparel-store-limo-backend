@@ -6,7 +6,16 @@ const colorVariantSchema = new mongoose.Schema({
         required: true,
         maxlength: 25,
     },
-    thumbnail: Buffer,
+    thumbnail: {
+        url: {
+            type: String,
+            required: true,
+        },
+        filename: {
+            type: String,
+            required: true,
+        },
+    },
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
 },
     {

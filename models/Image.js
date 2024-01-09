@@ -1,7 +1,14 @@
 const mongoose = require('mongoose');
 
 const imageSchema = new mongoose.Schema({
-    image: Buffer,
+    url: {
+        type: String,
+        required: true,
+    },
+    filename: {
+        type: String,
+        required: true,
+    },
     colorVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'ColorVariant' }
 });
 

@@ -10,11 +10,9 @@ const authenticate = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    console.log('token', token);
 
     try {
         const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
-        console.log(decodedToken)
 
         if (decodedToken.role === 'ADMIN') {
             // If role is admin, find the admin by id
