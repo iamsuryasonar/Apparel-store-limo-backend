@@ -47,7 +47,6 @@ exports.adminRegistration = async (req, res) => {
 };
 
 exports.adminLogIn = async (req, res) => {
-  console.log(req.body)
   if (!req.body.email) return res.status(400).json({ success: false, message: 'email required!!!' });
   if (!req.body.password) return res.status(400).json({ success: false, message: 'password required!!!' });
 

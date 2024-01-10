@@ -27,7 +27,6 @@ let uploadTos3 = (fileData) => {
 
         const request = s3.putObject(params);
         request.on('httpHeaders', (statusCode, headers) => {
-            console.log(headers)
             resolve({
                 url: `https://ipfs.filebase.io/ipfs/${headers['x-amz-meta-cid']}`,
                 fileName: fileName
@@ -47,7 +46,6 @@ const deleteS3Object = async (path) => {
         };
 
         const deleteResult = await s3.deleteObject(deleteParams).promise();
-        console.log('Object deleted successfully:', deleteResult);
     } catch (error) {
         console.error('Error deleting object:', error);
     }

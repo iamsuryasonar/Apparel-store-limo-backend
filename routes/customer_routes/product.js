@@ -3,9 +3,11 @@ const router = express.Router();
 
 const { CustomerProductController } = require('../../controllers');
 
-router.get('/keyword/:keyword', CustomerProductController.getProductByKeyword);
+router.get('/keyword/:keyword', CustomerProductController.getProductsByKeyword);
 router.get('/products', CustomerProductController.getAllProduct);
-router.get('/:ProductId', CustomerProductController.getProductById);
+router.get('/:id', CustomerProductController.getProductById);
+router.get('/category/:id', CustomerProductController.getProductByCategoryId);
+
 
 
 module.exports = router;

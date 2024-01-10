@@ -6,6 +6,8 @@ const { AdminProductController } = require('../../controllers');
 
 router.get('/:id', AdminProductController.getProductById);
 router.get('/', AdminProductController.getAllProducts);
+
+router.put('/toggleIsPublished/:id', AdminProductController.toggleIsPublished);
 router.post('/', upload.fields([{ name: 'colorVariantThumbnail', maxCount: 1 }, { name: 'images', maxCount: 6 }]), AdminProductController.addProduct);
 router.put('/addcolorandsizes', upload.fields([{ name: 'colorVariantThumbnail', maxCount: 1 }, { name: 'images', maxCount: 6 }]), AdminProductController.addColorAndItsSizeVariant);
 router.put('/product_info/:id', upload.none(), AdminProductController.updateProductInfo);

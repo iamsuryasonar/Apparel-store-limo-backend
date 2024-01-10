@@ -8,8 +8,6 @@ const awsConfig = {
     signatureVersion: 'v4'
 }
 
-console.log(awsConfig)
-
 const s3 = new AWS.S3(awsConfig);
 
 module.exports = {

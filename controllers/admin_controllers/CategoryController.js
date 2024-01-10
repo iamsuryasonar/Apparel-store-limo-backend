@@ -67,8 +67,7 @@ exports.updateCategory = async (req, res) => {
     }
 };
 
-//! Precoutions: since category is related to products its risky to delete category
-
+//category is related to products it should not be deleted.
 
 // exports.deleteCategory = async (req, res) => {
 //     try {

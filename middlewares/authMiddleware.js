@@ -36,7 +36,6 @@ const authenticate = async (req, res, next) => {
 
         next(); // Call the next middleware or route handler
     } catch (error) {
-        console.log(error);
         res.status(401).json({ message: 'Invalid token' });
     }
 };

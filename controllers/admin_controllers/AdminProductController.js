@@ -3,56 +3,50 @@ const Category = require('../../models/Category');
 const SizeVariant = require('../../models/SizeVariant');
 const ColorVariant = require('../../models/ColorVariant');
 const Image = require('../../models/Image');
-const fs = require('fs');
-let path = require("path");
-const mongoose = require('mongoose')
 const sharp = require('sharp');
 const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig');
-const { cidParser } = require('../../common/cidParser')
 
 exports.addProduct = async (req, res) => {
-  let sizeVariants = req.body.sizeVariants;
-  if (!Array.isArray(sizeVariants)) {
-    let arr = []
-    arr.push(sizeVariants)
-    sizeVariants = arr;
-  }
-
-
-  const colorVariantThumbnail = req.files['colorVariantThumbnail'][0];
-  const images = req.files['images'];
-
-  //convert to webp with quality 20%
-  const colorVariantThumbnailWebp = await sharp(colorVariantThumbnail.buffer)
-    .webp([{ near_lossless: true }, { quality: 20 }])
-    .toBuffer();
-
-  let colorVariantThumbnailInfo;
-  await uploadTos3(colorVariantThumbnailWebp).then((result) => {
-    console.log('thumbnail', result);
-    colorVariantThumbnailInfo = result;
-  })
-
-  let imageUrlArr;
-  //convert each image to webp with quality 40%
-  if (images?.length >= 1) {
-    imageUrlArr = await Promise.all(images.map(async (image) => {
-      try {
-        const webpImageBuffer = await sharp(image.buffer)
-          .webp([{ near_lossless: true }, { quality: 40 }])
-          .toBuffer();
-
-        const result = await uploadTos3(webpImageBuffer);
-        console.log('result', result);
-        return result;
-      } catch (error) {
-        console.error('Error processing image:', error);
-        throw error;
-      }
-    }));
-  }
-
   try {
+    let sizeVariants = req.body.sizeVariants;
+    if (!Array.isArray(sizeVariants)) {
+      let arr = []
+      arr.push(sizeVariants)
+      sizeVariants = arr;
+    }
+
+    const colorVariantThumbnail = req.files['colorVariantThumbnail'][0];
+    const images = req.files['images'];
+
+    //convert to webp with quality 20%
+    const colorVariantThumbnailWebp = await sharp(colorVariantThumbnail.buffer)
+      .webp([{ near_lossless: true }, { quality: 20 }])
+      .toBuffer();
+
+    let colorVariantThumbnailInfo;
+    await uploadTos3(colorVariantThumbnailWebp).then((result) => {
+      colorVariantThumbnailInfo = result;
+    })
+
+    let imageUrlArr;
+    //convert each image to webp with quality 40%
+    if (images?.length >= 1) {
+      imageUrlArr = await Promise.all(images.map(async (image) => {
+        try {
+          const webpImageBuffer = await sharp(image.buffer)
+            .webp([{ near_lossless: true }, { quality: 40 }])
+            .toBuffer();
+
+          const result = await uploadTos3(webpImageBuffer);
+          return result;
+        } catch (error) {
+          console.error('Error processing image:', error);
+          throw error;
+        }
+      }));
+    }
+
+
     const {
       name,
       description,
@@ -115,48 +109,46 @@ exports.addProduct = async (req, res) => {
 };
 
 exports.addColorAndItsSizeVariant = async (req, res) => {
-  let sizeVariants = req.body.sizeVariants;
-  if (!Array.isArray(sizeVariants)) {
-    let arr = []
-    arr.push(sizeVariants)
-    sizeVariants = arr;
-  }
-
-
-  const colorVariantThumbnail = req.files['colorVariantThumbnail'][0];
-  const images = req.files['images'];
-
-  //convert to webp with quality 20%
-  const colorVariantThumbnailWebp = await sharp(colorVariantThumbnail.buffer)
-    .webp([{ near_lossless: true }, { quality: 20 }])
-    .toBuffer();
-
-  let colorVariantThumbnailInfo;
-  await uploadTos3(colorVariantThumbnailWebp).then((result) => {
-    console.log('thumbnail', result);
-    colorVariantThumbnailInfo = result;
-  })
-
-  let imageUrlArr;
-  //convert each image to webp with quality 40%
-  if (images?.length >= 1) {
-    imageUrlArr = await Promise.all(images.map(async (image) => {
-      try {
-        const webpImageBuffer = await sharp(image.buffer)
-          .webp([{ near_lossless: true }, { quality: 40 }])
-          .toBuffer();
-
-        const result = await uploadTos3(webpImageBuffer);
-        console.log('result', result);
-        return result;
-      } catch (error) {
-        console.error('Error processing image:', error);
-        throw error;
-      }
-    }));
-  }
-
   try {
+    let sizeVariants = req.body.sizeVariants;
+    if (!Array.isArray(sizeVariants)) {
+      let arr = []
+      arr.push(sizeVariants)
+      sizeVariants = arr;
+    }
+
+
+    const colorVariantThumbnail = req.files['colorVariantThumbnail'][0];
+    const images = req.files['images'];
+
+    //convert to webp with quality 20%
+    const colorVariantThumbnailWebp = await sharp(colorVariantThumbnail.buffer)
+      .webp([{ near_lossless: true }, { quality: 20 }])
+      .toBuffer();
+
+    let colorVariantThumbnailInfo;
+    await uploadTos3(colorVariantThumbnailWebp).then((result) => {
+      colorVariantThumbnailInfo = result;
+    })
+
+    let imageUrlArr;
+    //convert each image to webp with quality 40%
+    if (images?.length >= 1) {
+      imageUrlArr = await Promise.all(images.map(async (image) => {
+        try {
+          const webpImageBuffer = await sharp(image.buffer)
+            .webp([{ near_lossless: true }, { quality: 40 }])
+            .toBuffer();
+
+          const result = await uploadTos3(webpImageBuffer);
+          return result;
+        } catch (error) {
+          console.error('Error processing image:', error);
+          throw error;
+        }
+      }));
+    }
+
     const {
       productId,
       colorVariantName
@@ -217,7 +209,6 @@ exports.getAllProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    console.log('page and limit', page, limit)
     const skip = (page - 1) * limit;
 
     // Use find to retrieve paginated products
@@ -237,7 +228,6 @@ exports.getAllProducts = async (req, res) => {
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
     const categories = await Category.find();
-    console.log(categories)
 
 
     res.status(200).json({
@@ -279,6 +269,31 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+
+
+exports.toggleIsPublished = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    if (!product.isPublished) {
+      product.isPublished = false;
+    }
+
+    const isPublished = product.isPublished
+    product.isPublished = !isPublished;
+    const updatedProduct = await product.save();
+
+    res.status(200).json(updatedProduct);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 exports.getProductsByCategoryId = async (req, res) => {
   try {
@@ -421,7 +436,6 @@ exports.update_thumbnail_image = async (req, res) => {
     } = req.body;
 
     const colorVariantThumbnail = req.files['thumbnail'][0];
-    console.log(colorVariantThumbnail);
 
     //convert to webp with quality 20%
     const colorVariantThumbnailWebp = await sharp(colorVariantThumbnail.buffer)
@@ -431,12 +445,10 @@ exports.update_thumbnail_image = async (req, res) => {
 
     let colorVariantThumbnailInfo;
     await uploadTos3(colorVariantThumbnailWebp).then((result) => {
-      console.log('thumbnail', result);
       colorVariantThumbnailInfo = result;
     })
 
     await deleteS3Object(path).then((result) => {
-      console.log('deleted thumbnail', result);
     })
 
 
@@ -457,8 +469,8 @@ exports.update_thumbnail_image = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 }
+
 exports.add_color_variant_image = async (req, res) => {
-  console.log(req.params.id)
   try {
     const colorVariantImage = req.files['image'][0];
 
@@ -472,7 +484,6 @@ exports.add_color_variant_image = async (req, res) => {
       colorVariantImageInfo = result;
     })
     const color_variant = await ColorVariant.findById(req.params.id);
-    console.log('colorvariant', color_variant)
     if (!color_variant) return res.status(404).json({ message: 'Color variant not found!!!' });
 
     const image = new Image({
@@ -483,7 +494,7 @@ exports.add_color_variant_image = async (req, res) => {
 
     const newImage = await image.save();
 
-    res.status(201).json({ message: 'Color variant thumbnail updated successfully!!', newImage: newImage });
+    res.status(201).json({ message: 'Color variant image added successfully!!', newImage: newImage });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
@@ -508,7 +519,6 @@ exports.update_color_variant_image = async (req, res) => {
     })
 
     await deleteS3Object(filename).then((result) => {
-      console.log('deleted thumbnail', result);
     })
 
     const image = await Image.findById(req.params.id);
@@ -519,7 +529,7 @@ exports.update_color_variant_image = async (req, res) => {
     image.filename = colorVariantImageInfo.fileName;
     const updatedImage = await image.save();
 
-    res.status(201).json({ message: 'Color variant thumbnail updated successfully!!', updatedImage: updatedImage });
+    res.status(201).json({ message: 'Color variant image updated successfully!!', updatedImage: updatedImage });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });

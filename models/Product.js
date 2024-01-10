@@ -21,6 +21,10 @@ const productSchema = new mongoose.Schema({
         minlength: 3,
         maxlength: 255,
     },
+    isPublished: {
+        type: Boolean,
+        default: false,
+    },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
 },
     {
