@@ -1,5 +1,6 @@
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
+const { success, error, validation } = require('../../responseAPI')
 
 exports.getAllProduct = async (req, res) => {
 
@@ -18,10 +19,6 @@ exports.getAllProduct = async (req, res) => {
       .limit(limit)
       .exec();
 
-    if (!products) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
     // Get the total count of products
     const totalProducts = await Product.countDocuments({ isPublished: true });
 
@@ -30,7 +27,7 @@ exports.getAllProduct = async (req, res) => {
     const hasPreviousPage = page > 1;
     const categories = await Category.find();
 
-    res.status(200).json({
+    res.status(200).json(success("OK", {
       categories,
       products,
       pagination: {
@@ -39,32 +36,34 @@ exports.getAllProduct = async (req, res) => {
         total_products: totalProducts,
         total_pages: totalPages,
       },
-    });
+    },
+      res.statusCode),
+    );
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
+
     const product = await Product.findOne({ _id: id, isPublished: true }).populate({
       path: 'colorvariants',
       populate: ['images', 'sizevariants']
     })
       .exec();
 
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
 
-    res.status(200).json({
+    res.status(200).json(success("OK", {
       product
-    });
+    },
+      res.statusCode),
+    );
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -97,7 +96,8 @@ exports.getProductsByKeyword = async (req, res) => {
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    res.status(200).json({
+    
+    res.status(200).json(success("OK", {
       products,
       pagination: {
         page_no: page,
@@ -105,10 +105,12 @@ exports.getProductsByKeyword = async (req, res) => {
         total_products: totalProducts,
         total_pages: totalPages,
       },
-    });
+    },
+      res.statusCode),
+    );
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
+
   }
 };
 
@@ -119,18 +121,15 @@ exports.getProductByCategoryId = async (req, res) => {
   const skip = (page - 1) * limit;
 
   try {
-    const products = await Product.find({ category: id, isPublished: true }).populate({
-      path: 'colorvariants',
-      populate: ['images', 'sizevariants']
-    })
+    const products = await Product.find({ category: id, isPublished: true })
+      .populate({
+        path: 'colorvariants',
+        populate: ['images', 'sizevariants']
+      })
       .skip(skip)
       .limit(limit)
       .exec();
 
-
-    if (!products) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
     // Get the total count of products that match the keyword
     const totalProducts = await Product.countDocuments({ category: id, isPublished: true });
 
@@ -138,7 +137,7 @@ exports.getProductByCategoryId = async (req, res) => {
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    res.status(200).json({
+    res.status(200).json(success("OK", {
       products,
       pagination: {
         page_no: page,
@@ -146,9 +145,10 @@ exports.getProductByCategoryId = async (req, res) => {
         total_products: totalProducts,
         total_pages: totalPages,
       },
-    });
+    },
+      res.statusCode),
+    );
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };

@@ -5,9 +5,20 @@ const ColorVariant = require('../../models/ColorVariant');
 const Image = require('../../models/Image');
 const sharp = require('sharp');
 const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig');
+const { success, error, validation } = require('../../responseAPI')
 
 exports.addProduct = async (req, res) => {
   try {
+    const {
+      name,
+      description,
+      keyword,
+      tag,
+      categoryId,
+      colorVariantName
+    } = req.body;
+
+
     let sizeVariants = req.body.sizeVariants;
     if (!Array.isArray(sizeVariants)) {
       let arr = []
@@ -45,16 +56,6 @@ exports.addProduct = async (req, res) => {
         }
       }));
     }
-
-
-    const {
-      name,
-      description,
-      keyword,
-      tag,
-      categoryId,
-      colorVariantName
-    } = req.body;
 
     const product = new Product({
       name,
@@ -101,22 +102,29 @@ exports.addProduct = async (req, res) => {
 
     const savedProduct = await product.save();
 
-    res.status(201).json({ message: 'Product created successfully', productId: savedProduct._id });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(201).json(success("OK", {
+      product: savedProduct
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
 exports.addColorAndItsSizeVariant = async (req, res) => {
   try {
+    const {
+      productId,
+      colorVariantName
+    } = req.body;
+
     let sizeVariants = req.body.sizeVariants;
     if (!Array.isArray(sizeVariants)) {
       let arr = []
       arr.push(sizeVariants)
       sizeVariants = arr;
     }
-
 
     const colorVariantThumbnail = req.files['colorVariantThumbnail'][0];
     const images = req.files['images'];
@@ -148,14 +156,10 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
         }
       }));
     }
-
-    const {
-      productId,
-      colorVariantName
-    } = req.body;
-
+    
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ message: 'Product not found!!!' });
+
+    if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
 
     const color_variant = new ColorVariant({
       name: colorVariantName,
@@ -198,10 +202,13 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
         populate: ['images', 'sizevariants']
       });
 
-    res.status(201).json({ message: 'Color variant and its size variant added successfully!!', updatedProduct: updatedProduct });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(201).json(success("OK", {
+      updatedProduct
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -229,8 +236,7 @@ exports.getAllProducts = async (req, res) => {
     const hasPreviousPage = page > 1;
     const categories = await Category.find();
 
-
-    res.status(200).json({
+    res.status(200).json(success("OK", {
       categories,
       products,
       pagination: {
@@ -239,13 +245,14 @@ exports.getAllProducts = async (req, res) => {
         total_products: totalProducts,
         total_pages: totalPages,
       },
-    });
+    },
+      res.statusCode),
+    );
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
-
 
 exports.getProductById = async (req, res) => {
   try {
@@ -258,40 +265,41 @@ exports.getProductById = async (req, res) => {
       })
       .exec()
 
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    if (!product) return res.status(404).json(error("Product not found", res.statusCode));
 
-    res.status(200).json(product);
+    res.status(200).json(success("OK", {
+      product
+    },
+      res.statusCode),
+    );
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
-
-
 
 exports.toggleIsPublished = async (req, res) => {
   try {
     const { id } = req.params;
     const product = await Product.findById(id);
 
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    if (!product) return res.status(404).json(error("Product not found", res.statusCode));
 
-    if (!product.isPublished) {
-      product.isPublished = false;
-    }
+
+    if (!product.isPublished) product.isPublished = false;
 
     const isPublished = product.isPublished
     product.isPublished = !isPublished;
     const updatedProduct = await product.save();
 
-    res.status(200).json(updatedProduct);
+    res.status(200).json(success("OK", {
+      product,
+    },
+      res.statusCode),
+    );
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -299,12 +307,11 @@ exports.getProductsByCategoryId = async (req, res) => {
   try {
     const { id } = req.params;
     const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
-
-    const skip = (page - 1) * pageSize;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     const category = await Category.findById(id);
-    if (!category) return res.status(404).json({ error: 'Invalid category id' });
+    if (!category) return res.status(422).json(validation({ username: "Invalid category id" }));
 
     const products = await Product.find({ category: id })
       .populate({
@@ -313,24 +320,33 @@ exports.getProductsByCategoryId = async (req, res) => {
       })
       .exec()
       .skip(skip)
-      .limit(pageSize);
+      .limit(limit);
 
-    if (!products || products.length === 0) {
-      return res.status(404).json({ error: 'Products not found' });
-    }
+    // Get the total count of products
+    const totalProducts = await Product.countDocuments();
 
-    res.status(200).json({
-      category,
+    const totalPages = Math.ceil(totalProducts / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+    const categories = await Category.find();
+
+    if (!products || products.length === 0) return res.status(404).json(error("Products not found", res.statusCode));
+
+    res.status(200).json(success("OK", {
+      categories,
       products,
       pagination: {
-        currentPage: page,
-        pageSize,
-        totalProducts: products.length, // You might want to query the total count for more accurate pagination
+        page_no: page,
+        per_page: limit,
+        total_products: totalProducts,
+        total_pages: totalPages,
       },
-    });
+    },
+      res.statusCode),
+    );
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -344,7 +360,7 @@ exports.updateProductInfo = async (req, res) => {
     const existingProduct = await Product.findById(productId);
 
     if (!existingProduct) {
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json(error("Product not found", res.statusCode));
     }
 
     // Update product details
@@ -356,11 +372,14 @@ exports.updateProductInfo = async (req, res) => {
 
     // Save the updated product
     const updatedProduct = await existingProduct.save();
+    const updated_product = await Product.findById(productId);
 
-    res.status(200).json({ message: 'Product updated successfully', productId: updatedProduct._id });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(200).json(success("OK", {
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -379,7 +398,7 @@ exports.addSizeVariant = async (req, res) => {
     const color_variant = await ColorVariant.findById(colorVariantId)
       .populate('sizevariants');
 
-    if (!color_variant) return res.status(404).json({ message: 'Color variant not found!!!' });
+    if (!color_variant) return res.status(404).json(error("Color variant not found", res.statusCode));
 
     const size_variants = new SizeVariant({
       name,
@@ -391,10 +410,12 @@ exports.addSizeVariant = async (req, res) => {
     })
     await size_variants.save();
 
-    res.status(201).json({ message: 'Size variant added successfully!!', });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(200).json(success("OK", {
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -409,23 +430,29 @@ exports.update_size_variant = async (req, res) => {
       mrp,
       selling_price,
     } = req.body;
+
     const sizeVariantId = req.params.id;
 
     const size_variant = await SizeVariant.findById(sizeVariantId);
 
-    if (!size_variant) return res.status(404).json({ message: 'Color variant not found!!!' });
+    if (!size_variant) return res.status(404).json(error("Color variant not found", res.statusCode));
 
     size_variant.name = name;
     size_variant.status = status;
     size_variant.stock = stock;
     size_variant.mrp = mrp;
     size_variant.selling_price = selling_price;
+
     await size_variant.save();
 
-    res.status(201).json({ message: 'Size variant updated successfully!!', });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(200).json(success("OK", {
+
+    },
+      res.statusCode),
+    );
+
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -448,13 +475,9 @@ exports.update_thumbnail_image = async (req, res) => {
       colorVariantThumbnailInfo = result;
     })
 
-    await deleteS3Object(path).then((result) => {
-    })
-
-
-
     const color_variant = await ColorVariant.findById(req.params.id);
-    if (!color_variant) return res.status(404).json({ message: 'Color variant not found!!!' });
+
+    if (!color_variant) return res.status(404).json(error("Color variant not found", res.statusCode));
 
     color_variant.thumbnail = {
       url: colorVariantThumbnailInfo.url,
@@ -463,10 +486,18 @@ exports.update_thumbnail_image = async (req, res) => {
 
     const updatedColorVariant = await color_variant.save();
 
-    res.status(201).json({ message: 'Color variant thumbnail updated successfully!!', updatedColorVariant: updatedColorVariant });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    if (updatedColorVariant) {
+      await deleteS3Object(path).then((result) => {
+      })
+    }
+
+    res.status(200).json(success("OK", {
+
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 }
 
@@ -484,7 +515,7 @@ exports.add_color_variant_image = async (req, res) => {
       colorVariantImageInfo = result;
     })
     const color_variant = await ColorVariant.findById(req.params.id);
-    if (!color_variant) return res.status(404).json({ message: 'Color variant not found!!!' });
+    if (!color_variant) return res.status(404).json(error("Color variant not found", res.statusCode));
 
     const image = new Image({
       url: colorVariantImageInfo.url,
@@ -494,10 +525,14 @@ exports.add_color_variant_image = async (req, res) => {
 
     const newImage = await image.save();
 
-    res.status(201).json({ message: 'Color variant image added successfully!!', newImage: newImage });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(200).json(success("OK", {
+
+    },
+      res.statusCode),
+    );
+
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 }
 
@@ -518,116 +553,44 @@ exports.update_color_variant_image = async (req, res) => {
       colorVariantImageInfo = result;
     })
 
-    await deleteS3Object(filename).then((result) => {
-    })
-
     const image = await Image.findById(req.params.id);
-    if (!image) {
-      return res.status(404).json({ message: 'Image not found!!!' });
-    }
+
+    if (!image) return res.status(404).json(error("Image not found", res.statusCode));
+
     image.url = colorVariantImageInfo.url;
     image.filename = colorVariantImageInfo.fileName;
     const updatedImage = await image.save();
 
-    res.status(201).json({ message: 'Color variant image updated successfully!!', updatedImage: updatedImage });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+    if (updatedImage) {
+      await deleteS3Object(filename).then((result) => {
+      })
+    }
+
+    res.status(200).json(success("OK",
+      {},
+      res.statusCode),
+    );
+
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 }
 
-//todo below api might not work
-
-// API to update a colorVariant of a product
-// router.put('/updateColorVariant/:productId/:colorVariantId',
-exports.updateColorVariantByID = async (req, res) => {
-  try {
-    const { name, thumbnail } = req.body;
-    const productId = req.params.productId;
-    const colorVariantId = req.params.colorVariantId;
-
-    const existingProduct = await Product.findById(productId);
-
-    if (!existingProduct) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    const colorVariantToUpdate = existingProduct.colorVariants.find(color => color._id.toString() === colorVariantId);
-
-    if (!colorVariantToUpdate) {
-      return res.status(404).json({ message: 'ColorVariant not found' });
-    }
-
-    colorVariantToUpdate.name = name;
-    colorVariantToUpdate.thumbnail = thumbnail;
-
-    const updatedProduct = await existingProduct.save();
-
-    res.status(200).json({ message: 'ColorVariant updated successfully', productId: updatedProduct._id });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-
-
-// API to update a single sizeVariant of a colorVariant in a product
-// router.put('/updateSizeVariant/:productId/:colorVariantId/:sizeVariantId',
-exports.updateSizeVariantByID = async (req, res) => {
-  try {
-    const { mrp, selling_price, stock, status } = req.body;
-    const productId = req.params.productId;
-    const colorVariantId = req.params.colorVariantId;
-    const sizeVariantId = req.params.sizeVariantId;
-
-    const existingProduct = await Product.findById(productId);
-
-    if (!existingProduct) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-
-    const colorVariantToUpdate = existingProduct.colorVariants.find(color => color._id.toString() === colorVariantId);
-
-    if (!colorVariantToUpdate) {
-      return res.status(404).json({ message: 'ColorVariant not found' });
-    }
-
-    const sizeVariantToUpdate = colorVariantToUpdate.sizeVariants.find(size => size._id.toString() === sizeVariantId);
-
-    if (!sizeVariantToUpdate) {
-      return res.status(404).json({ message: 'SizeVariant not found' });
-    }
-
-    sizeVariantToUpdate.mrp = mrp;
-    sizeVariantToUpdate.selling_price = selling_price;
-    sizeVariantToUpdate.stock = stock;
-    sizeVariantToUpdate.status = status;
-
-    const updatedProduct = await existingProduct.save();
-
-    res.status(200).json({ message: 'SizeVariant updated successfully', productId: updatedProduct._id });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-
-// todo: delete all related data ex. colorVariants, images and sizeVariants
+// todo: delete all related data eg. colorVariants, images and sizeVariants
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await Product.deleteOne({ _id: id });
 
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    if (result.deletedCount === 0) return res.status(404).json(error("Product not found", res.statusCode));
 
-    res.status(204).json({ message: 'Product deleted successfully!' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+
+    res.status(204).json(success("OK", {
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };  

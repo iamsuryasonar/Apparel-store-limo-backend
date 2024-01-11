@@ -8,8 +8,14 @@ const categorySchema = new mongoose.Schema({
         maxlength: 255,
     },
     bannerImage: {
-        type: String,
-        required: true,
+        url: {
+            type: String,
+            required: true,
+        },
+        filename: {
+            type: String,
+            required: true,
+        },
     },
     isActive: {
         type: Boolean,

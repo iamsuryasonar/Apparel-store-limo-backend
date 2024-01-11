@@ -18,7 +18,5 @@ router.put('/update_image/:id', upload.fields([{ name: 'image', maxCount: 1 }]),
 router.post('/add_image/:id', upload.fields([{ name: 'image', maxCount: 1 }]), AdminProductController.add_color_variant_image);
 router.delete('/:id', AdminProductController.deleteProduct);
 router.get('/category/:id', AdminProductController.getProductsByCategoryId);
-router.put('/updateSizeVariant/:productId /:colorVariantId/:sizeVariantId', upload.none(), AdminProductController.updateSizeVariantByID);
-router.put('/updateColorVariant/:productId/:colorVariantId', upload.none(), AdminProductController.updateColorVariantByID);
 
 module.exports = router;
