@@ -96,7 +96,7 @@ exports.getProductsByKeyword = async (req, res) => {
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-    
+
     res.status(200).json(success("OK", {
       products,
       pagination: {
@@ -150,5 +150,108 @@ exports.getProductByCategoryId = async (req, res) => {
     );
   } catch (err) {
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  }
+};
+
+exports.getProductsByName = async (req, res) => {
+
+  try {
+    const { name } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Use a regular expression to perform a case-insensitive search
+    const keywordRegex = new RegExp(name, 'i');
+
+    // Find all products that match the keyword, and apply pagination
+    const products = await Product.find({ name: keywordRegex, isPublished: true })
+      .populate({
+        path: 'colorvariants',
+        populate: ['images', 'sizevariants']
+      })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+
+    // Get the total count of products that match the keyword
+    const totalProducts = await Product.countDocuments({ name: keywordRegex, isPublished: true });
+
+    const totalPages = Math.ceil(totalProducts / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+
+    res.status(200).json(success("OK", {
+      products,
+      pagination: {
+        page_no: page,
+        per_page: limit,
+        total_products: totalProducts,
+        total_pages: totalPages,
+      },
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
+
+  }
+};
+
+exports.getProductsByPrice = async (req, res) => {
+
+  try {
+    const { from, to } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+
+    const products = await Product.find({
+      price: {
+        $gte: from,
+        $lte: to,
+      },
+      isPublished: true,
+    },)
+      .populate({
+        path: 'colorvariants',
+        populate: ['images', 'sizevariants']
+      })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+
+    // Get the total count of products that match the keyword
+    const totalProducts = await Product.countDocuments({
+      price: {
+        $gte: from,
+        $lte: to,
+      },
+      isPublished: true,
+    });
+
+    const totalPages = Math.ceil(totalProducts / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+
+    res.status(200).json(success("OK", {
+      products,
+      pagination: {
+        page_no: page,
+        per_page: limit,
+        total_products: totalProducts,
+        total_pages: totalPages,
+      },
+    },
+      res.statusCode),
+    );
+  } catch (err) {
+    return res.status(500).json(error("Something went wrong", res.statusCode));
+
   }
 };

@@ -8,11 +8,8 @@ const bodyParser = require('body-parser');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 let app = express();
-
-app.use(express.static(__dirname + '/public'));
-app.use('/uploads', express.static('uploads'));
-
 app.use(cors())
+
 
 const authMiddleware = require('./middlewares/authMiddleware');
 
@@ -24,8 +21,6 @@ const { customer_auth_route, customer_product_route } = require('./routes/custom
 app.use(express.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname + '/public'));
-app.use('/uploads', express.static('uploads'));
 
 // Mongoose options
 const mongooseOptions = {

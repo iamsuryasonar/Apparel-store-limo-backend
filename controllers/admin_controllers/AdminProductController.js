@@ -108,6 +108,7 @@ exports.addProduct = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
+    console.log(err)
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
@@ -156,7 +157,7 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
         }
       }));
     }
-    
+
     const product = await Product.findById(productId);
 
     if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
