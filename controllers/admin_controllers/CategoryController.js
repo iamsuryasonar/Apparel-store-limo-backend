@@ -51,7 +51,7 @@ exports.addCategory = async (req, res) => {
         await session.commitTransaction();
         session.endSession();
 
-        res.status(200).json(success("OK", {
+        res.status(201).json(success("OK", {
             categories
         },
             res.statusCode),
@@ -81,7 +81,6 @@ exports.updateCategory = async (req, res) => {
         if (!category) return res.status(404).json(error("Category not found", res.statusCode));
         
         if (req?.files && req?.files['image'] && req?.files['image'][0] !== null && path) {
-            console.log('heelo')
             const bannerImage = req.files['image'][0];
 
             //convert to webp with quality 20%

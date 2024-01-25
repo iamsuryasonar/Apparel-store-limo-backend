@@ -4,6 +4,8 @@
 const Customer = require('../../models/Customer');
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { success, error, validation } = require('../../responseAPI')
+
 
 exports.customerRegistration = async (req, res) => {
   if (!req.body.firstName) return res.status(422).json(validation({ username: "First name is required" }));
@@ -55,16 +57,16 @@ exports.customerLogIn = async (req, res) => {
     if (!matched) return res.status(400).json(error("Invalid Password", res.statusCode));
 
     // create token using jsonwebtoken library
-    const token = jwt.sign({ _id: customer._id }, process.env.TOKEN_SECRET)
+    const token = jwt.sign({ _id: customer._id, role: customer.role, exp: Math.floor(Date.now() / 1000) + 3 * 3600, }, process.env.TOKEN_SECRET)
     const userData = await Customer.findOne({ email: req.body.email })
     const userinfo = {
       'firstName': userData.firstName,
       'lastName': userData.lastName,
       'email': userData.email,
     }
-    const response = { ...userinfo, token }
 
-    res.status(201).json(success("OK", {
+    res.status(200).json(success("OK", {
+      ...userinfo, token
     },
       res.statusCode),
     );

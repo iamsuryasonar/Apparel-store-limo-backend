@@ -1,11 +1,9 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const dotenv = require('dotenv')
 const Joi = require('joi')
 let cors = require('cors')
 let multer = require('multer')
 const bodyParser = require('body-parser');
-const { MongoClient, ServerApiVersion } = require('mongodb');
 require('dotenv').config();
 let app = express();
 app.use(cors())
@@ -14,7 +12,7 @@ app.use(cors())
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const { admin_auth_route, admin_product_route, admin_category_route } = require('./routes/admin_routes');
-const { customer_auth_route, customer_product_route } = require('./routes/customer_routes');
+const { customer_auth_route, customer_product_route, cart_route, order_route } = require('./routes/customer_routes');
 
 
 // app.use(express.urlencoded({ extended: false }));
@@ -62,11 +60,13 @@ app.use('/admin/api/v1/category', authMiddleware.authenticate, authMiddleware.re
 
 //! Customer routes----------------------------------->
 app.use('/api/v1/product', customer_product_route);
+app.use('/api/v1/cart', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), cart_route);
+app.use('/api/v1/order', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), order_route);
 
 app.get("/", function (request, response) {
-    response.send("Hello World!")
+    response.send("Hello World!");
 })
 
 app.listen(process.env.PORT, function () {
-    console.log("Started application on port %d", process.env.PORT)
+    console.log("Started application on port %d", process.env.PORT);
 });

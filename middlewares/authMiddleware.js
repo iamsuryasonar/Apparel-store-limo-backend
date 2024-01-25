@@ -12,25 +12,36 @@ const authenticate = async (req, res, next) => {
 
     try {
         const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
-
         if (decodedToken.role === 'ADMIN') {
             // If role is admin, find the admin by id
             const admin = await Admin.findById(decodedToken._id);
             if (!admin) return res.status(401).json(error("Invalid token", res.statusCode));
 
-            req.user = admin; // Set the user object on the request
+            req.user = {
+                _id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role,
+            }; // Set the user object on the request
         } else if (decodedToken.role === 'CUSTOMER') {
             // If role is customer, find the customer by id
-            const customer = await Customer.findById(decodedToken.id);
+            const customer = await Customer.findById(decodedToken._id);
             if (!customer) return res.status(401).json(error("Invalid token", res.statusCode));
 
-            req.user = customer; // Set the user object on the request
+            req.user = {
+                _id: customer._id,
+                firstName: customer.firstName,
+                lastName: customer.lastName,
+                email: customer.email,
+                role: customer.role,
+            }; // Set the user object on the request
+
         } else {
             return res.status(401).json(error("Invalid token", res.statusCode));
         }
 
         next(); // Call the next middleware or route handler
-    } catch (error) {
+    } catch (err) {
         return res.status(401).json(error("Invalid token", res.statusCode));
     }
 };

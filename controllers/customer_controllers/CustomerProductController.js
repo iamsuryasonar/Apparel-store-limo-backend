@@ -182,7 +182,6 @@ exports.getProductsByName = async (req, res) => {
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-
     res.status(200).json(success("OK", {
       products,
       pagination: {
@@ -201,46 +200,63 @@ exports.getProductsByName = async (req, res) => {
 };
 
 exports.getProductsByPrice = async (req, res) => {
-
   try {
     const { from, to } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-
-    const products = await Product.find({
-      price: {
-        $gte: from,
-        $lte: to,
+    const products = await Product.aggregate([
+      {
+        $lookup: {
+          from: "colorvariants",
+          localField: "_id",
+          foreignField: "product",
+          as: "colorVariants"
+        }
       },
-      isPublished: true,
-    },)
-      .populate({
-        path: 'colorvariants',
-        populate: ['images', 'sizevariants']
-      })
-      .skip(skip)
-      .limit(limit)
-      .exec();
-
+      {
+        $unwind: "$colorVariants"
+      },
+      {
+        $lookup: {
+          from: "sizevariants",
+          localField: "colorVariants._id",
+          foreignField: "colorVariant",
+          as: "sizeVariants"
+        }
+      },
+      {
+        $unwind: "$sizeVariants"
+      },
+      {
+        $match: {
+          'sizeVariants.selling_price': {
+            $gt: Number(from),
+            $lt: Number(to)
+          }
+        }
+      },
+      {
+        $facet: {
+          count: [
+            { $group: { _id: null, count: { $sum: 1 } } },
+          ],
+          matchedResults: [
+            { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
+          ],
+        },
+      },
+    ]);
 
     // Get the total count of products that match the keyword
-    const totalProducts = await Product.countDocuments({
-      price: {
-        $gte: from,
-        $lte: to,
-      },
-      isPublished: true,
-    });
-
+    const totalProducts = products[0].count[0].count;
     const totalPages = Math.ceil(totalProducts / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
-
     res.status(200).json(success("OK", {
-      products,
+      products: products[0].matchedResults,
       pagination: {
         page_no: page,
         per_page: limit,
@@ -251,7 +267,7 @@ exports.getProductsByPrice = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
+    console.error(err);
     return res.status(500).json(error("Something went wrong", res.statusCode));
-
   }
 };
