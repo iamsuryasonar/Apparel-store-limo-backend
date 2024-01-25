@@ -12,8 +12,6 @@ exports.createOrder = async (req, res) => {
 
     try {
         let {
-            cartId,
-            productId,
             contactNumber,
             houseNumber,
             landmark,
@@ -24,9 +22,6 @@ exports.createOrder = async (req, res) => {
         } = req.body;
 
         const customerId = req.user._id;
-
-        const product = await Product.find(productId);
-        if (!product) return res.status(404).json(error("Product not found", res.statusCode));
 
         const cartItems = await Item.find({ customer: customerId });
         if (!cartItems) return res.status(404).json(error("Cart item not found", res.statusCode));
