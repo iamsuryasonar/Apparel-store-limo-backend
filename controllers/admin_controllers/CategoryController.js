@@ -31,7 +31,6 @@ exports.addCategory = async (req, res) => {
             .webp([{ near_lossless: true }, { quality: 20 }])
             .toBuffer();
 
-
         let bannerImageInfo;
         await uploadTos3(bannerImageWebp).then((result) => {
             bannerImageInfo = result;
@@ -57,15 +56,16 @@ exports.addCategory = async (req, res) => {
             res.statusCode),
         );
     } catch (err) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(500).json(error("Something went wrong", res.statusCode));
-    } finally {
-        session.endSession();
-    }
+        console.log(err)
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(500).json(error("Something went wrong", res.statusCode));
+        } finally {
+            session.endSession();
+        }
 };
 
-exports.updateCategory = async (req, res) => {
+exports.updateCategory = async (req, res) => { 
     let session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -75,6 +75,8 @@ exports.updateCategory = async (req, res) => {
             name,
             isActive
         } = req.body;
+        
+        console.log(req.path)
 
         const category = await Category.findById(req.params.id);
 
@@ -88,11 +90,14 @@ exports.updateCategory = async (req, res) => {
                 .webp([{ near_lossless: true }, { quality: 20 }])
                 .toBuffer();
 
-
             let bannerImageInfo;
             await uploadTos3(bannerImageWebp).then((result) => {
                 bannerImageInfo = result;
             })
+
+
+
+            console.log(bannerImageInfo);
 
             category.bannerImage = {
                 url: bannerImageInfo.url,

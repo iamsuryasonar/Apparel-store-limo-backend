@@ -5,6 +5,8 @@ const CustomerProductController = require('./customer_controllers/CustomerProduc
 const CategoryController = require('./admin_controllers/CategoryController')
 const CartController = require('./customer_controllers/CartController');
 const OrderController = require('./customer_controllers/OrderController');
+const AdminOrderController = require('./admin_controllers/AdminOrderController');
+
 
 module.exports = {
     AuthController,
@@ -13,5 +15,6 @@ module.exports = {
     CustomerProductController,
     CategoryController,
     CartController,
-    OrderController
+    OrderController,
+    AdminOrderController
 }

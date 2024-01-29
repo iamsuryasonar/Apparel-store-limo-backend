@@ -18,7 +18,6 @@ const orderSchema = new mongoose.Schema({
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
     address: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
     item: { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
-
 });
 
 module.exports = mongoose.model('Order', orderSchema);

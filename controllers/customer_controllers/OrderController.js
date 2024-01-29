@@ -27,19 +27,18 @@ exports.createOrder = async (req, res) => {
         if (!cartItems) return res.status(404).json(error("Cart item not found", res.statusCode));
 
         // create address
-        const address = await Address.create(
-            [{
-                contactnumber: contactNumber,
-                housenumber: houseNumber,
-                landmark,
-                town,
-                city,
-                pin,
-                state,
-                customer: customerId
-            }],
-            { session }
-        );
+        const address = new Address({
+            contactnumber: contactNumber,
+            housenumber: houseNumber,
+            landmark,
+            town,
+            city,
+            pin,
+            state,
+            customer: customerId
+        });
+
+        await address.save({ session });
 
         cartItems.forEach(async (item) => {
             const sizevariant = await SizeVariant.findById({ _id: item.sizevariant });

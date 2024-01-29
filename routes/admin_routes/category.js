@@ -5,7 +5,7 @@ const upload = multer();
 const { CategoryController } = require('../../controllers');
 
 router.get('/', CategoryController.getAllCategories);
-router.post('/add_category', upload.fields([{ name: 'image', maxCount: 1 }]), CategoryController.addCategory);
+router.post('/', upload.fields([{ name: 'image', maxCount: 1 }]), CategoryController.addCategory);
 router.put('/:id', upload.fields([{ name: 'image', maxCount: 1 }]), CategoryController.updateCategory);
 // router.delete('/:id', CategoryController.deleteCategory);
 
