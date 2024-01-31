@@ -4,10 +4,13 @@ const { success, error, validation } = require('../../responseAPI')
 const sharp = require('sharp')
 const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig')
 
-exports.getAllOrders = async (req, res) => {
-    // pagination required
+exports.getAnOrder = async (req, res) => {
     try {
-        const orders = await Order.find()
+        const id = req.params.id
+
+        if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json(error("Id is not valid", res.statusCode));
+
+        const order = await Order.findById(id)
             .populate({
                 path: 'item',
                 populate: [
@@ -21,9 +24,52 @@ exports.getAllOrders = async (req, res) => {
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
             ])
             .exec();
-        console.log(orders)
+
+        res.status(200).json(success("OK",
+            order,
+            res.statusCode),
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};
+
+exports.getAllOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const orders = await Order.find()
+            .populate({
+                path: 'item',
+                populate: [
+                    { path: 'product' },
+                    { path: 'sizevariant' },
+                    { path: 'colorvariant', populate: { path: 'images' } },
+                ],
+            })
+            .populate('address')
+            .populate([
+                { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
+            ])
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
+
         res.status(200).json(success("OK", {
-            orders
+            orders,
+            pagination: {
+                page_no: page,
+                per_page: limit,
+                total_orders: totalOrders,
+                total_pages: totalPages,
+            },
         },
             res.statusCode),
         );
@@ -33,67 +79,249 @@ exports.getAllOrders = async (req, res) => {
     }
 };
 
-exports.updateOrder = async (req, res) => {
+exports.getAllProcessedOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const orders = await Order.find({ status: 'PROCCESSED' })
+            .populate({
+                path: 'item',
+                populate: [
+                    { path: 'product' },
+                    { path: 'sizevariant' },
+                    { path: 'colorvariant', populate: { path: 'images' } },
+                ],
+            })
+            .populate('address')
+            .populate([
+                { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
+            ])
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.status(200).json(success("OK", {
+            orders,
+            pagination: {
+                page_no: page,
+                per_page: limit,
+                total_orders: totalOrders,
+                total_pages: totalPages,
+            },
+        },
+            res.statusCode),
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};
+
+exports.getAllOrderedOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const orders = await Order.find({ status: 'ORDERED' })
+            .populate({
+                path: 'item',
+                populate: [
+                    { path: 'product' },
+                    { path: 'sizevariant' },
+                    { path: 'colorvariant', populate: { path: 'images' } },
+                ],
+            })
+            .populate('address')
+            .populate([
+                { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
+            ])
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.status(200).json(success("OK", {
+            orders,
+            pagination: {
+                page_no: page,
+                per_page: limit,
+                total_orders: totalOrders,
+                total_pages: totalPages,
+            },
+        },
+            res.statusCode),
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};
+
+exports.getAllCancelledOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const orders = await Order.find({ status: 'CANCELLED' })
+            .populate({
+                path: 'item',
+                populate: [
+                    { path: 'product' },
+                    { path: 'sizevariant' },
+                    { path: 'colorvariant', populate: { path: 'images' } },
+                ],
+            })
+            .populate('address')
+            .populate([
+                { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
+            ])
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.status(200).json(success("OK", {
+            orders,
+            pagination: {
+                page_no: page,
+                per_page: limit,
+                total_orders: totalOrders,
+                total_pages: totalPages,
+            },
+        },
+            res.statusCode),
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};
+
+exports.getAllTransitOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const orders = await Order.find({ status: 'TRANSIT' })
+            .populate({
+                path: 'item',
+                populate: [
+                    { path: 'product' },
+                    { path: 'sizevariant' },
+                    { path: 'colorvariant', populate: { path: 'images' } },
+                ],
+            })
+            .populate('address')
+            .populate([
+                { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
+            ])
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.status(200).json(success("OK", {
+            orders,
+            pagination: {
+                page_no: page,
+                per_page: limit,
+                total_orders: totalOrders,
+                total_pages: totalPages,
+            },
+        },
+            res.statusCode),
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};
+
+exports.getAllDeliveredOrders = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const orders = await Order.find({ status: 'DELIVERED' })
+            .populate({
+                path: 'item',
+                populate: [
+                    { path: 'product' },
+                    { path: 'sizevariant' },
+                    { path: 'colorvariant', populate: { path: 'images' } },
+                ],
+            })
+            .populate('address')
+            .populate([
+                { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
+            ])
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.status(200).json(success("OK", {
+            orders,
+            pagination: {
+                page_no: page,
+                per_page: limit,
+                total_orders: totalOrders,
+                total_pages: totalPages,
+            },
+        },
+            res.statusCode),
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};
+
+exports.updateOrderStatus = async (req, res) => {
     let session = await mongoose.startSession();
     session.startTransaction();
     try {
         const { id } = req.params;
         const {
-            path,
-            name,
-            isActive
+            status
         } = req.body;
 
-        console.log(req.path)
+        const ORDERSTATUS = ['ORDERED', 'PROCCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED']
+        if (!ORDERSTATUS.includes(status)) return res.status(500).json(error("Status not valid", res.statusCode));
 
-        const category = await Category.findById(req.params.id);
+        const order = await Order.findById(id);
 
-        if (!category) return res.status(404).json(error("Category not found", res.statusCode));
+        if (!order) return res.status(404).json(error("Order not found", res.statusCode));
 
-        if (req?.files && req?.files['image'] && req?.files['image'][0] !== null && path) {
-            const bannerImage = req.files['image'][0];
-
-            //convert to webp with quality 20%
-            const bannerImageWebp = await sharp(bannerImage.buffer)
-                .webp([{ near_lossless: true }, { quality: 20 }])
-                .toBuffer();
-
-            let bannerImageInfo;
-            await uploadTos3(bannerImageWebp).then((result) => {
-                bannerImageInfo = result;
-            })
-
-
-
-            console.log(bannerImageInfo);
-
-            category.bannerImage = {
-                url: bannerImageInfo.url,
-                filename: bannerImageInfo.fileName
-            };
-        }
-
-        if (name) {
-            category.name = name;
-        }
-
-        if (isActive) {
-            category.isActive = isActive;
-        }
-
-        await category.save({ session });
+        order.status = status;
+        await order.save({ session });
         await session.commitTransaction();
         await session.endSession();
 
-        const updatedCategory = await Category.findById(id);
-
-        if (path && updatedCategory) {
-            await deleteS3Object(path).then((result) => {
-            })
-        }
-
         res.status(200).json(success("OK", {
-            updatedCategory
+            order
         },
             res.statusCode),
         );

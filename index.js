@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const mongooseOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 50000,
 };
 mongoose.set("strictQuery", false);
 // Connect to the MongoDB server
