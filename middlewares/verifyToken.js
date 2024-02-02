@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken')
 const { error } = require('../responseAPI')
 const verify = async (req, res, next) => {
+
     const token = req?.header('Authorization')?.slice(7);
     if (!token) return res.status(401).json(error("Access denied", res.statusCode));
 

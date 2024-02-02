@@ -8,10 +8,10 @@ const { success, error, validation } = require('../../responseAPI')
 
 
 exports.customerRegistration = async (req, res) => {
-  if (!req.body.firstName) return res.status(422).json(validation({ username: "First name is required" }));
-  if (!req.body.lastName) return res.status(422).json(validation({ username: "Last name is required" }));
-  if (!req.body.email) return res.status(422).json(validation({ username: "Email is required" }));
-  if (!req.body.password) return res.status(42).json(validation({ username: "Password is required" }));
+  if (!req.body.firstName) return res.status(422).json(validation({ firstName: "First name is required" }));
+  if (!req.body.lastName) return res.status(422).json(validation({ lastName: "Last name is required" }));
+  if (!req.body.email) return res.status(422).json(validation({ email: "Email is required" }));
+  if (!req.body.password) return res.status(42).json(validation({ password: "Password is required" }));
 
   try {
     //check if email exists in the database

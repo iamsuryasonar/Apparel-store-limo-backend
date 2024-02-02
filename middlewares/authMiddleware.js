@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Customer = require('../models/Customer');
 const { error } = require('../responseAPI')
+
 // Middleware to authenticate Admin and Customer based on their role
 const authenticate = async (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -22,7 +23,8 @@ const authenticate = async (req, res, next) => {
                 name: admin.name,
                 email: admin.email,
                 role: admin.role,
-            }; // Set the user object on the request
+            };
+
         } else if (decodedToken.role === 'CUSTOMER') {
             // If role is customer, find the customer by id
             const customer = await Customer.findById(decodedToken._id);
@@ -34,15 +36,15 @@ const authenticate = async (req, res, next) => {
                 lastName: customer.lastName,
                 email: customer.email,
                 role: customer.role,
-            }; // Set the user object on the request
+            };
 
         } else {
             return res.status(401).json(error("Invalid token", res.statusCode));
         }
 
-        next(); // Call the next middleware or route handler
+        next();
     } catch (err) {
-        return res.status(401).json(error("Invalid token", res.statusCode));
+        return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
 
@@ -51,10 +53,8 @@ const authenticate = async (req, res, next) => {
 function restrictTo(role) {
     return (req, res, next) => {
         if (req.user.role === role) {
-            // User is authorized to access the route, call the next middleware function
             next();
         } else {
-            // User is not authorized, send a 403 Forbidden response
             return res.status(403).json(error("Not authorized to access", res.statusCode));
         }
     };
