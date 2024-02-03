@@ -38,6 +38,7 @@ let uploadTos3 = (fileData) => {
         request.send();
     })
 }
+
 const deleteS3Object = async (path) => {
     try {
         const deleteParams = {

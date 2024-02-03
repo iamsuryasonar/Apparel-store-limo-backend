@@ -1,2 +1,10 @@
+PORT=3001
 DB_CONNECT = mongodb+srv://username:password@clustername.xsbtfy9.mongodb.net/?retryWrites=true&w=majority
 TOKEN_SECRET = secret token
+JWT_EXPIRES_IN = 3d
+ENDPOINT="https://s3.com"
+SIGNATUREVERSION="v1"
+AWS_ACCESS_KEY_ID="access id"
+AWS_ACCESS_KEY_SECRET="access secret"
+AWS_BUCKET_NAME="bucket name"
+REGION_NAME="region"

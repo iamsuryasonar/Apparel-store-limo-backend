@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Customer = require('../models/Customer');
-const { error } = require('../responseAPI')
+const { error } = require('../common/responseAPI')
 
 // Middleware to authenticate Admin and Customer based on their role
 const authenticate = async (req, res, next) => {

@@ -1,10 +1,9 @@
 const express = require('express')
 const mongoose = require('mongoose')
-const Joi = require('joi')
-let cors = require('cors')
-let multer = require('multer')
 const bodyParser = require('body-parser');
+let cors = require('cors')
 require('dotenv').config();
+
 let app = express();
 app.use(cors())
 
@@ -14,8 +13,6 @@ const authMiddleware = require('./middlewares/authMiddleware');
 const { admin_auth_route, admin_product_route, admin_category_route, admin_order_route } = require('./routes/admin_routes');
 const { customer_auth_route, customer_product_route, cart_route, order_route } = require('./routes/customer_routes');
 
-
-// app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -43,31 +40,26 @@ const db = mongoose.connection;
 db.on('error', error => {
     console.error('MongoDB connection error:', error);
 });
-db.once('open', (error) => {
-    console.log('MongoDB connection established', error);
+db.once('open', (_) => {
+    console.log('MongoDB connection established');
 });
 db.on('disconnected', (error) => {
     console.log('MongoDB disconnected', error);
 });
 
-
-//! Auth routes--------------------------------------->
+//! Auth routes
 app.use('/admin/api/v1/auth', admin_auth_route);
 app.use('/api/v1/auth', customer_auth_route);
 
-//! Admin routes-------------------------------------->
+//! Admin routes
 app.use('/admin/api/v1/product', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), admin_product_route);
 app.use('/admin/api/v1/category', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), admin_category_route);
 app.use('/admin/api/v1/order', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), admin_order_route);
 
-//! Customer routes----------------------------------->
+//! Customer routes
 app.use('/api/v1/product', customer_product_route);
 app.use('/api/v1/cart', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), cart_route);
 app.use('/api/v1/order', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), order_route);
-
-app.get("/", function (request, response) {
-    response.send("Hello World!");
-})
 
 app.listen(process.env.PORT, function () {
     console.log("Started application on port %d", process.env.PORT);

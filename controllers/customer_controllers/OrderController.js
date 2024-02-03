@@ -1,16 +1,15 @@
 const mongoose = require('mongoose')
-const { success, error, validation } = require('../../responseAPI')
+const { success, error, validation } = require('../../common/responseAPI')
 const Item = require('../../models/Item')
 const Order = require('../../models/Order')
-const Product = require('../../models/Product')
 const Address = require('../../models/Address')
 const SizeVariant = require('../../models/SizeVariant')
 
 exports.createOrder = async (req, res) => {
-    let session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
+        let session = await mongoose.startSession();
+        session.startTransaction();
+
         let {
             contactNumber,
             houseNumber,
@@ -73,7 +72,6 @@ exports.createOrder = async (req, res) => {
             .exec();
 
         await session.commitTransaction();
-        session.endSession();
 
         res.status(201).json(success("OK", {
             allOrders
@@ -83,8 +81,9 @@ exports.createOrder = async (req, res) => {
     } catch (err) {
         console.log(err)
         await session.abortTransaction();
-        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
+    } finally {
+        session.endSession();
     }
 };
 
@@ -115,10 +114,10 @@ exports.getOrdereditems = async (req, res) => {
 };
 
 exports.cancelOrder = async (req, res) => {
-    let session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
+        let session = await mongoose.startSession();
+        session.startTransaction();
+
         const { id } = req.params;
         const customerId = req.user._id;
 
@@ -129,18 +128,19 @@ exports.cancelOrder = async (req, res) => {
         const cancelledOrderedItems = await orderedItem[0].save({ session });
 
         await session.commitTransaction();
-        session.endSession();
 
         res.status(200).json(success("OK", {
             cancelledOrderedItems
         },
             res.statusCode),
         );
+
     } catch (err) {
         console.log(err);
         await session.abortTransaction();
-        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
+    } finally {
+        session.endSession();
     }
 };
 
@@ -170,9 +170,6 @@ exports.getCancelledOrder = async (req, res) => {
         );
 
     } catch (err) {
-        console.log(err);
-        await session.abortTransaction();
-        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };

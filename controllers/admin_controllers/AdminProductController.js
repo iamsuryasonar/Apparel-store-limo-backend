@@ -5,10 +5,13 @@ const ColorVariant = require('../../models/ColorVariant');
 const Image = require('../../models/Image');
 const sharp = require('sharp');
 const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig');
-const { success, error, validation } = require('../../responseAPI')
+const { success, error, validation } = require('../../common/responseAPI')
 
 exports.addProduct = async (req, res) => {
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     const {
       name,
       description,
@@ -51,7 +54,6 @@ exports.addProduct = async (req, res) => {
           const result = await uploadTos3(webpImageBuffer);
           return result;
         } catch (error) {
-          console.error('Error processing image:', error);
           throw error;
         }
       }));
@@ -74,7 +76,7 @@ exports.addProduct = async (req, res) => {
       product: product._id,
     })
 
-    await color_variant.save();
+    await color_variant.save({ session });
 
     imageUrlArr?.forEach(async (item) => {
       const image = new Image({
@@ -83,7 +85,7 @@ exports.addProduct = async (req, res) => {
         colorVariant: color_variant._id,
       })
 
-      await image.save();
+      await image.save({ session });
 
     }),
       sizeVariants.forEach(async (size) => {
@@ -96,11 +98,12 @@ exports.addProduct = async (req, res) => {
           colorVariant: color_variant._id,
         })
 
-        await size_variants.save();
+        await size_variants.save({ session });
 
       })
 
-    const savedProduct = await product.save();
+    const savedProduct = await product.save({ session });
+    await session.commitTransaction();
 
     res.status(201).json(success("OK", {
       product: savedProduct
@@ -108,13 +111,18 @@ exports.addProduct = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
-    console.log(err)
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 };
 
 exports.addColorAndItsSizeVariant = async (req, res) => {
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     const {
       productId,
       colorVariantName
@@ -159,7 +167,6 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
     }
 
     const product = await Product.findById(productId);
-
     if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
 
     const color_variant = new ColorVariant({
@@ -171,7 +178,7 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
       product: product._id,
     })
 
-    await color_variant.save();
+    await color_variant.save({ session });
 
     imageUrlArr?.forEach(async (item) => {
       const image = new Image({
@@ -180,7 +187,7 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
         colorVariant: color_variant._id,
       })
 
-      await image.save();
+      await image.save({ session });
 
     }),
       sizeVariants.forEach(async (size) => {
@@ -193,9 +200,9 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
           colorVariant: color_variant._id,
         })
 
-        await size_variants.save();
-
+        await size_variants.save({ session });
       })
+    await session.commitTransaction();
 
     const updatedProduct = await Product.findById(productId)
       .populate({
@@ -209,7 +216,10 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 };
 
@@ -233,8 +243,7 @@ exports.getAllProducts = async (req, res) => {
     const totalProducts = await Product.countDocuments();
 
     const totalPages = Math.ceil(totalProducts / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
+
     const categories = await Category.find();
 
     res.status(200).json(success("OK", {
@@ -250,7 +259,6 @@ exports.getAllProducts = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
-    console.error(err);
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
@@ -282,10 +290,9 @@ exports.getProductById = async (req, res) => {
 exports.toggleIsPublished = async (req, res) => {
   try {
     const { id } = req.params;
+
     const product = await Product.findById(id);
-
     if (!product) return res.status(404).json(error("Product not found", res.statusCode));
-
 
     if (!product.isPublished) product.isPublished = false;
 
@@ -312,7 +319,7 @@ exports.getProductsByCategoryId = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const category = await Category.findById(id);
-    if (!category) return res.status(422).json(validation({ username: "Invalid category id" }));
+    if (!category) return res.status(422).json(validation({ categoryId: "Invalid category id" }));
 
     const products = await Product.find({ category: id })
       .populate({
@@ -327,10 +334,10 @@ exports.getProductsByCategoryId = async (req, res) => {
     const totalProducts = await Product.countDocuments();
 
     const totalPages = Math.ceil(totalProducts / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
+
     const categories = await Category.find();
 
+    //Todo: this line is not necessary, test and delete this line
     if (!products || products.length === 0) return res.status(404).json(error("Products not found", res.statusCode));
 
     res.status(200).json(success("OK", {
@@ -354,6 +361,9 @@ exports.getProductsByCategoryId = async (req, res) => {
 
 exports.updateProductInfo = async (req, res) => {
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     const { name, description, keyword, tag, categoryId } = req.body;
     const productId = req.params.id;
 
@@ -371,22 +381,28 @@ exports.updateProductInfo = async (req, res) => {
     existingProduct.tag = tag;
     existingProduct.category = categoryId;
 
-    // Save the updated product
-    const updatedProduct = await existingProduct.save();
-    const updated_product = await Product.findById(productId);
+    const updatedProduct = await existingProduct.save({ session });
+    await session.commitTransaction();
 
     res.status(200).json(success("OK", {
+      updatedProduct
     },
       res.statusCode),
     );
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 };
 
 
 exports.addSizeVariant = async (req, res) => {
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     const {
       name,
       status,
@@ -394,6 +410,7 @@ exports.addSizeVariant = async (req, res) => {
       mrp,
       selling_price,
     } = req.body;
+
     const colorVariantId = req.params.id;
 
     const color_variant = await ColorVariant.findById(colorVariantId)
@@ -409,14 +426,18 @@ exports.addSizeVariant = async (req, res) => {
       selling_price,
       colorVariant: color_variant._id,
     })
-    await size_variants.save();
+    const AddedSizeVariant = await size_variants.save({ session });
+    await session.commitTransaction();
 
-    res.status(200).json(success("OK", {
-    },
+    res.status(200).json(success("OK",
+      AddedSizeVariant,
       res.statusCode),
     );
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 };
 
@@ -424,6 +445,9 @@ exports.addSizeVariant = async (req, res) => {
 exports.update_size_variant = async (req, res) => {
 
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     const {
       name,
       status,
@@ -435,7 +459,6 @@ exports.update_size_variant = async (req, res) => {
     const sizeVariantId = req.params.id;
 
     const size_variant = await SizeVariant.findById(sizeVariantId);
-
     if (!size_variant) return res.status(404).json(error("Color variant not found", res.statusCode));
 
     size_variant.name = name;
@@ -444,21 +467,25 @@ exports.update_size_variant = async (req, res) => {
     size_variant.mrp = mrp;
     size_variant.selling_price = selling_price;
 
-    await size_variant.save();
+    const updatedSizeVariant = await size_variant.save({ session });
+    await session.commitTransaction();
 
-    res.status(200).json(success("OK", {
-
-    },
+    res.status(200).json(success("OK", updatedSizeVariant,
       res.statusCode),
     );
 
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 };
 
 exports.update_thumbnail_image = async (req, res) => {
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
     const {
       path
     } = req.body;
@@ -477,7 +504,6 @@ exports.update_thumbnail_image = async (req, res) => {
     })
 
     const color_variant = await ColorVariant.findById(req.params.id);
-
     if (!color_variant) return res.status(404).json(error("Color variant not found", res.statusCode));
 
     color_variant.thumbnail = {
@@ -485,25 +511,30 @@ exports.update_thumbnail_image = async (req, res) => {
       filename: colorVariantThumbnailInfo.fileName
     };
 
-    const updatedColorVariant = await color_variant.save();
+    const updatedColorVariant = await color_variant.save({ session });
+    await session.commitTransaction();
 
     if (updatedColorVariant) {
       await deleteS3Object(path).then((result) => {
       })
     }
 
-    res.status(200).json(success("OK", {
-
-    },
+    res.status(200).json(success("OK", updatedColorVariant,
       res.statusCode),
     );
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 }
 
 exports.add_color_variant_image = async (req, res) => {
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     const colorVariantImage = req.files['image'][0];
 
     //convert to webp with quality 20%
@@ -524,21 +555,26 @@ exports.add_color_variant_image = async (req, res) => {
       colorVariant: color_variant._id,
     })
 
-    const newImage = await image.save();
+    const newImage = await image.save({ session });
+    await session.commitTransaction();
 
-    res.status(200).json(success("OK", {
-
-    },
+    res.status(200).json(success("OK", newImage,
       res.statusCode),
     );
 
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 }
 
 exports.update_color_variant_image = async (req, res) => {
   try {
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     const {
       filename
     } = req.body;
@@ -560,7 +596,8 @@ exports.update_color_variant_image = async (req, res) => {
 
     image.url = colorVariantImageInfo.url;
     image.filename = colorVariantImageInfo.fileName;
-    const updatedImage = await image.save();
+    const updatedImage = await image.save({ session });
+    await session.commitTransaction();
 
     if (updatedImage) {
       await deleteS3Object(filename).then((result) => {
@@ -568,12 +605,15 @@ exports.update_color_variant_image = async (req, res) => {
     }
 
     res.status(200).json(success("OK",
-      {},
+      updatedImage,
       res.statusCode),
     );
 
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 }
 
@@ -585,7 +625,6 @@ exports.deleteProduct = async (req, res) => {
     const result = await Product.deleteOne({ _id: id });
 
     if (result.deletedCount === 0) return res.status(404).json(error("Product not found", res.statusCode));
-
 
     res.status(204).json(success("OK", {
     },

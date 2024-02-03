@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const { upload, convertToWebp } = require('../../middlewares/multerConfig');
+const { upload } = require('../../middlewares/multerConfig');
 const { AdminProductController } = require('../../controllers');
 
 router.get('/:id', AdminProductController.getProductById);

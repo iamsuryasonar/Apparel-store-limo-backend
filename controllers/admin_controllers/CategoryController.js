@@ -1,6 +1,6 @@
 const Category = require('../../models/Category');
 const mongoose = require('mongoose')
-const { success, error, validation } = require('../../responseAPI')
+const { success, error, validation } = require('../../common/responseAPI')
 const sharp = require('sharp')
 const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig')
 
@@ -19,10 +19,10 @@ exports.getAllCategories = async (req, res) => {
 };
 
 exports.addCategory = async (req, res) => {
+    try {
     let session = await mongoose.startSession();
     session.startTransaction();
 
-    try {
         let { name } = req.body;
         const bannerImage = req.files['image'][0];
 
@@ -48,7 +48,6 @@ exports.addCategory = async (req, res) => {
         );
 
         await session.commitTransaction();
-        session.endSession();
 
         res.status(201).json(success("OK", {
             categories
@@ -56,9 +55,7 @@ exports.addCategory = async (req, res) => {
             res.statusCode),
         );
     } catch (err) {
-        console.log(err)
             await session.abortTransaction();
-            session.endSession();
             return res.status(500).json(error("Something went wrong", res.statusCode));
         } finally {
             session.endSession();
@@ -66,20 +63,17 @@ exports.addCategory = async (req, res) => {
 };
 
 exports.updateCategory = async (req, res) => { 
-    let session = await mongoose.startSession();
-    session.startTransaction();
     try {
+        let session = await mongoose.startSession();
+        session.startTransaction();
         const { id } = req.params;
         const {
             path,
             name,
             isActive
         } = req.body;
-        
-        console.log(req.path)
 
         const category = await Category.findById(req.params.id);
-
         if (!category) return res.status(404).json(error("Category not found", res.statusCode));
         
         if (req?.files && req?.files['image'] && req?.files['image'][0] !== null && path) {
@@ -95,10 +89,6 @@ exports.updateCategory = async (req, res) => {
                 bannerImageInfo = result;
             })
 
-
-
-            console.log(bannerImageInfo);
-
             category.bannerImage = {
                 url: bannerImageInfo.url,
                 filename: bannerImageInfo.fileName
@@ -113,12 +103,9 @@ exports.updateCategory = async (req, res) => {
             category.isActive = isActive;
         }
         
-        await category.save({ session });
+        const updatedCategory = await category.save({ session });
         await session.commitTransaction();
-        await session.endSession();
 
-        const updatedCategory = await Category.findById(id);
-        
         if (path && updatedCategory) { 
             await deleteS3Object(path).then((result) => {
             })

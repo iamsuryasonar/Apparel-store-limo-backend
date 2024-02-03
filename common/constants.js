@@ -1,8 +1,11 @@
-const filterItems = {
+const FILTER_ITEMS = {
     NEWEST_FIRST: "NEWEST_FIRST",
     OLDEST_FIRST: "OLDEST_FIRST"
 }
 
+const ORDER_STATUS = ['ORDERED', 'PROCCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED']
+
 module.exports = {
-    filterItems
+    FILTER_ITEMS,
+    ORDER_STATUS
 }

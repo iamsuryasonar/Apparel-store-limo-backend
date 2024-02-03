@@ -1,7 +1,7 @@
 const Order = require('../../models/Order');
 const mongoose = require('mongoose')
-const { success, error, validation } = require('../../responseAPI')
-const { filterItems } = require('../../common/constants')
+const { success, error, validation } = require('../../common/responseAPI')
+const { FILTER_ITEMS, ORDER_STATUS } = require('../../common/constants')
 
 exports.getAnOrder = async (req, res) => {
     try {
@@ -45,7 +45,7 @@ exports.getAllOrders = async (req, res) => {
             createdAt: 1,
         }
 
-        if (filter === filterItems.NEWEST_FIRST) {
+        if (filter === FILTER_ITEMS.NEWEST_FIRST) {
             sortOption = {
                 createdAt: -1,
             }
@@ -70,7 +70,6 @@ exports.getAllOrders = async (req, res) => {
             .exec();
 
         const totalOrders = await Order.countDocuments();
-        console.log(orders)
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -102,7 +101,7 @@ exports.getAllProcessedOrders = async (req, res) => {
             createdAt: 1,
         }
 
-        if (filter === filterItems.NEWEST_FIRST) {
+        if (filter === FILTER_ITEMS.NEWEST_FIRST) {
             sortOption = {
                 createdAt: -1,
             }
@@ -158,7 +157,7 @@ exports.getAllOrderedOrders = async (req, res) => {
             createdAt: 1,
         }
 
-        if (filter === filterItems.NEWEST_FIRST) {
+        if (filter === FILTER_ITEMS.NEWEST_FIRST) {
             sortOption = {
                 createdAt: -1,
             }
@@ -214,7 +213,7 @@ exports.getAllCancelledOrders = async (req, res) => {
             createdAt: 1,
         }
 
-        if (filter === filterItems.NEWEST_FIRST) {
+        if (filter === FILTER_ITEMS.NEWEST_FIRST) {
             sortOption = {
                 createdAt: -1,
             }
@@ -270,7 +269,7 @@ exports.getAllTransitOrders = async (req, res) => {
             createdAt: 1,
         }
 
-        if (filter === filterItems.NEWEST_FIRST) {
+        if (filter === FILTER_ITEMS.NEWEST_FIRST) {
             sortOption = {
                 createdAt: -1,
             }
@@ -326,7 +325,7 @@ exports.getAllDeliveredOrders = async (req, res) => {
             createdAt: 1,
         }
 
-        if (filter === filterItems.NEWEST_FIRST) {
+        if (filter === FILTER_ITEMS.NEWEST_FIRST) {
             sortOption = {
                 createdAt: -1,
             }
@@ -372,25 +371,23 @@ exports.getAllDeliveredOrders = async (req, res) => {
 };
 
 exports.updateOrderStatus = async (req, res) => {
-    let session = await mongoose.startSession();
-    session.startTransaction();
     try {
+        let session = await mongoose.startSession();
+        session.startTransaction();
+
         const { id } = req.params;
         const {
             status
         } = req.body;
 
-        const ORDERSTATUS = ['ORDERED', 'PROCCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED']
-        if (!ORDERSTATUS.includes(status)) return res.status(500).json(error("Status not valid", res.statusCode));
+        if (!ORDER_STATUS.includes(status)) return res.status(500).json(error("Status not valid", res.statusCode));
 
         const order = await Order.findById(id);
-
         if (!order) return res.status(404).json(error("Order not found", res.statusCode));
 
         order.status = status;
         await order.save({ session });
         await session.commitTransaction();
-        await session.endSession();
 
         res.status(200).json(success("OK", {
             order
