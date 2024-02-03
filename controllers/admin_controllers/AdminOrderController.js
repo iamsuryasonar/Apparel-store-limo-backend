@@ -1,8 +1,7 @@
 const Order = require('../../models/Order');
 const mongoose = require('mongoose')
 const { success, error, validation } = require('../../responseAPI')
-const sharp = require('sharp')
-const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig')
+const { filterItems } = require('../../common/constants')
 
 exports.getAnOrder = async (req, res) => {
     try {
@@ -40,6 +39,17 @@ exports.getAllOrders = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
+        const filter = req.query.filter || 'OLDEST_FIRST';
+
+        let sortOption = {
+            createdAt: 1,
+        }
+
+        if (filter === filterItems.NEWEST_FIRST) {
+            sortOption = {
+                createdAt: -1,
+            }
+        }
 
         const orders = await Order.find()
             .populate({
@@ -54,11 +64,13 @@ exports.getAllOrders = async (req, res) => {
             .populate([
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
             ])
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .exec();
 
         const totalOrders = await Order.countDocuments();
+        console.log(orders)
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -84,6 +96,17 @@ exports.getAllProcessedOrders = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
+        const filter = req.query.filter || 'OLDEST_FIRST';
+
+        let sortOption = {
+            createdAt: 1,
+        }
+
+        if (filter === filterItems.NEWEST_FIRST) {
+            sortOption = {
+                createdAt: -1,
+            }
+        }
 
         const orders = await Order.find({ status: 'PROCCESSED' })
             .populate({
@@ -98,6 +121,7 @@ exports.getAllProcessedOrders = async (req, res) => {
             .populate([
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
             ])
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .exec();
@@ -128,6 +152,17 @@ exports.getAllOrderedOrders = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
+        const filter = req.query.filter || 'OLDEST_FIRST';
+
+        let sortOption = {
+            createdAt: 1,
+        }
+
+        if (filter === filterItems.NEWEST_FIRST) {
+            sortOption = {
+                createdAt: -1,
+            }
+        }
 
         const orders = await Order.find({ status: 'ORDERED' })
             .populate({
@@ -142,6 +177,7 @@ exports.getAllOrderedOrders = async (req, res) => {
             .populate([
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
             ])
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .exec();
@@ -172,6 +208,17 @@ exports.getAllCancelledOrders = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
+        const filter = req.query.filter || 'OLDEST_FIRST';
+
+        let sortOption = {
+            createdAt: 1,
+        }
+
+        if (filter === filterItems.NEWEST_FIRST) {
+            sortOption = {
+                createdAt: -1,
+            }
+        }
 
         const orders = await Order.find({ status: 'CANCELLED' })
             .populate({
@@ -186,6 +233,7 @@ exports.getAllCancelledOrders = async (req, res) => {
             .populate([
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
             ])
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .exec();
@@ -216,6 +264,17 @@ exports.getAllTransitOrders = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
+        const filter = req.query.filter || 'OLDEST_FIRST';
+
+        let sortOption = {
+            createdAt: 1,
+        }
+
+        if (filter === filterItems.NEWEST_FIRST) {
+            sortOption = {
+                createdAt: -1,
+            }
+        }
 
         const orders = await Order.find({ status: 'TRANSIT' })
             .populate({
@@ -230,6 +289,7 @@ exports.getAllTransitOrders = async (req, res) => {
             .populate([
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
             ])
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .exec();
@@ -260,6 +320,17 @@ exports.getAllDeliveredOrders = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
+        const filter = req.query.filter || 'OLDEST_FIRST';
+
+        let sortOption = {
+            createdAt: 1,
+        }
+
+        if (filter === filterItems.NEWEST_FIRST) {
+            sortOption = {
+                createdAt: -1,
+            }
+        }
 
         const orders = await Order.find({ status: 'DELIVERED' })
             .populate({
@@ -274,6 +345,7 @@ exports.getAllDeliveredOrders = async (req, res) => {
             .populate([
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
             ])
+            .sort(sortOption)
             .skip(skip)
             .limit(limit)
             .exec();

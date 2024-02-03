@@ -24,6 +24,10 @@ const sizeVariantSchema = new mongoose.Schema({
         enum: ['IN-STOCK', 'OUT-STOCK'],
         default: 'IN-STOCK',
     },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
     colorVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'ColorVariant' }
 });
 

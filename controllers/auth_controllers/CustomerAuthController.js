@@ -6,7 +6,6 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const { success, error, validation } = require('../../responseAPI')
 
-
 exports.customerRegistration = async (req, res) => {
   if (!req.body.firstName) return res.status(422).json(validation({ firstName: "First name is required" }));
   if (!req.body.lastName) return res.status(422).json(validation({ lastName: "Last name is required" }));

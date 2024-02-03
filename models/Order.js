@@ -15,6 +15,10 @@ const orderSchema = new mongoose.Schema({
         enum: ['ORDERED', 'PROCCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED'],
         default: 'ORDERED',
     },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
     address: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
     item: { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
