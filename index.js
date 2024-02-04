@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const bodyParser = require('body-parser');
 let cors = require('cors')
 require('dotenv').config();
+const https = require('https');
 
 let app = express();
 app.use(cors())
@@ -61,6 +62,15 @@ app.use('/api/v1/product', customer_product_route);
 app.use('/api/v1/cart', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), cart_route);
 app.use('/api/v1/order', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), order_route);
 
+app.get('/', (req, res) => {
+    res.send('Hello World!')
+})
+
 app.listen(process.env.PORT, function () {
     console.log("Started application on port %d", process.env.PORT);
+    setInterval(() => {
+        https.get('https://limo-backend-e2jw.onrender.com/', (res) => {
+            console.log(res.statusCode)
+        })
+    }, 14 * 60 * 1000)
 });
