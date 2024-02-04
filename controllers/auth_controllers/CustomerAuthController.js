@@ -30,7 +30,7 @@ exports.customerRegistration = async (req, res) => {
     },
       res.statusCode),
     );
-  } catch (error) {
+  } catch (err) {
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
@@ -61,7 +61,7 @@ exports.customerLogIn = async (req, res) => {
       res.statusCode),
     );
 
-  } catch (error) {
+  } catch (err) {
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
