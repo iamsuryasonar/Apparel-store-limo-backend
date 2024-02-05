@@ -9,7 +9,7 @@ const { success, error, validation } = require('../../common/responseAPI')
 
 exports.addProduct = async (req, res) => {
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -120,7 +120,7 @@ exports.addProduct = async (req, res) => {
 
 exports.addColorAndItsSizeVariant = async (req, res) => {
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -361,7 +361,7 @@ exports.getProductsByCategoryId = async (req, res) => {
 
 exports.updateProductInfo = async (req, res) => {
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
     const { name, description, keyword, tag, categoryId } = req.body;
@@ -400,7 +400,7 @@ exports.updateProductInfo = async (req, res) => {
 
 exports.addSizeVariant = async (req, res) => {
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -445,7 +445,7 @@ exports.addSizeVariant = async (req, res) => {
 exports.update_size_variant = async (req, res) => {
 
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -484,7 +484,7 @@ exports.update_size_variant = async (req, res) => {
 
 exports.update_thumbnail_image = async (req, res) => {
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
     const {
       path
@@ -532,7 +532,7 @@ exports.update_thumbnail_image = async (req, res) => {
 
 exports.add_color_variant_image = async (req, res) => {
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
     const colorVariantImage = req.files['image'][0];
@@ -572,7 +572,7 @@ exports.add_color_variant_image = async (req, res) => {
 
 exports.update_color_variant_image = async (req, res) => {
   try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
     const {

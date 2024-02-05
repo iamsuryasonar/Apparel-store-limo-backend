@@ -7,7 +7,7 @@ exports.addToCart = async (req, res) => {
 
     try {
         // Todo: should not add same product-sizeVariant twice
-        let session = await mongoose.startSession();
+        var session = await mongoose.startSession();
         session.startTransaction();
 
         let { quantity, productId, colorVariantId, sizeVariantId } = req.body;
@@ -66,7 +66,7 @@ exports.getAllItemsInCart = async (req, res) => {
 
 exports.updateProductQuantity = async (req, res) => {
     try {
-        let session = await mongoose.startSession();
+        var session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;
@@ -113,7 +113,7 @@ exports.updateProductQuantity = async (req, res) => {
 
 exports.removeItemFromCart = async (req, res) => {
     try {
-        let session = await mongoose.startSession();
+        var session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;

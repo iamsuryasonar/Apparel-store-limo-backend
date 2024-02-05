@@ -20,7 +20,7 @@ exports.getAllCategories = async (req, res) => {
 
 exports.addCategory = async (req, res) => {
     try {
-    let session = await mongoose.startSession();
+    var session = await mongoose.startSession();
     session.startTransaction();
 
         let { name } = req.body;
@@ -64,7 +64,7 @@ exports.addCategory = async (req, res) => {
 
 exports.updateCategory = async (req, res) => { 
     try {
-        let session = await mongoose.startSession();
+        var session = await mongoose.startSession();
         session.startTransaction();
         const { id } = req.params;
         const {

@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const mongooseOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 50000,
+    serverSelectionTimeoutMS: 60000,
 };
 mongoose.set("strictQuery", false);
 // Connect to the MongoDB server
@@ -72,5 +72,5 @@ app.listen(process.env.PORT, function () {
         https.get('https://limo-backend-e2jw.onrender.com/', (res) => {
             console.log(res.statusCode)
         })
-    }, 14 * 60 * 1000)
+    }, 1 * 60 * 1000)
 });

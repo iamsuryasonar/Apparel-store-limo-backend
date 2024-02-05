@@ -7,7 +7,7 @@ const SizeVariant = require('../../models/SizeVariant')
 
 exports.createOrder = async (req, res) => {
     try {
-        let session = await mongoose.startSession();
+        var session = await mongoose.startSession();
         session.startTransaction();
 
         let {
@@ -115,7 +115,7 @@ exports.getOrdereditems = async (req, res) => {
 
 exports.cancelOrder = async (req, res) => {
     try {
-        let session = await mongoose.startSession();
+        var session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;
