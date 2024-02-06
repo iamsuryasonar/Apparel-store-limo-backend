@@ -69,7 +69,8 @@ exports.getAllOrders = async (req, res) => {
             .limit(limit)
             .exec();
 
-        const totalOrders = await Order.countDocuments();
+
+        const totalOrders = orders.length;
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -125,7 +126,7 @@ exports.getAllProcessedOrders = async (req, res) => {
             .limit(limit)
             .exec();
 
-        const totalOrders = await Order.countDocuments();
+        const totalOrders = orders.length;
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -181,7 +182,7 @@ exports.getAllOrderedOrders = async (req, res) => {
             .limit(limit)
             .exec();
 
-        const totalOrders = await Order.countDocuments();
+        const totalOrders = orders.length;
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -237,7 +238,7 @@ exports.getAllCancelledOrders = async (req, res) => {
             .limit(limit)
             .exec();
 
-        const totalOrders = await Order.countDocuments();
+        const totalOrders = orders.length;
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -293,7 +294,7 @@ exports.getAllTransitOrders = async (req, res) => {
             .limit(limit)
             .exec();
 
-        const totalOrders = await Order.countDocuments();
+        const totalOrders = orders.length;
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -349,7 +350,7 @@ exports.getAllDeliveredOrders = async (req, res) => {
             .limit(limit)
             .exec();
 
-        const totalOrders = await Order.countDocuments();
+        const totalOrders = orders.length;
 
         const totalPages = Math.ceil(totalOrders / limit);
 

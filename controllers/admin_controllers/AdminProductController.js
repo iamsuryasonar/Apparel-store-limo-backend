@@ -345,7 +345,7 @@ exports.getProductsByCategoryId = async (req, res) => {
       .limit(limit);
 
     // Get the total count of products
-    const totalProducts = await Product.countDocuments();
+    const totalOrders = products.length;
 
     const totalPages = Math.ceil(totalProducts / limit);
 
