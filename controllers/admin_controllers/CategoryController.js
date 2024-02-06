@@ -24,6 +24,9 @@ exports.addCategory = async (req, res) => {
     session.startTransaction();
 
         let { name } = req.body;
+        if (!name) return res.status(400).json({ success: false, message: 'Name required' });
+        if (!req.files['image'][0]) return res.status(400).json({ success: false, message: 'Banner Image required' });
+
         const bannerImage = req.files['image'][0];
 
         //convert to webp with quality 20%
@@ -32,6 +35,7 @@ exports.addCategory = async (req, res) => {
             .toBuffer();
 
         let bannerImageInfo;
+
         await uploadTos3(bannerImageWebp).then((result) => {
             bannerImageInfo = result;
         })
@@ -85,6 +89,7 @@ exports.updateCategory = async (req, res) => {
                 .toBuffer();
 
             let bannerImageInfo;
+
             await uploadTos3(bannerImageWebp).then((result) => {
                 bannerImageInfo = result;
             })
@@ -107,8 +112,7 @@ exports.updateCategory = async (req, res) => {
         await session.commitTransaction();
 
         if (path && updatedCategory) { 
-            await deleteS3Object(path).then((result) => {
-            })
+            await deleteS3Object(path)
         }
         
         res.status(200).json(success("OK", {

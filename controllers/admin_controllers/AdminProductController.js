@@ -21,6 +21,12 @@ exports.addProduct = async (req, res) => {
       colorVariantName
     } = req.body;
 
+    if (!name) return res.status(400).json({ success: false, message: 'Name required' });
+    if (!description) return res.status(400).json({ success: false, message: 'Description required' });
+    if (!keyword) return res.status(400).json({ success: false, message: 'Keyword required' });
+    if (!tag) return res.status(400).json({ success: false, message: 'Tag required' });
+    if (!categoryId) return res.status(400).json({ success: false, message: 'Category id required' });
+    if (!colorVariantName) return res.status(400).json({ success: false, message: 'Color variant name required' });
 
     let sizeVariants = req.body.sizeVariants;
     if (!Array.isArray(sizeVariants)) {
@@ -127,6 +133,11 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
       productId,
       colorVariantName
     } = req.body;
+
+    if (!productId) return res.status(400).json({ success: false, message: 'Product id required' });
+    if (!colorVariantName) return res.status(400).json({ success: false, message: 'color variant name required' });
+
+
 
     let sizeVariants = req.body.sizeVariants;
     if (!Array.isArray(sizeVariants)) {
@@ -314,6 +325,9 @@ exports.toggleIsPublished = async (req, res) => {
 exports.getProductsByCategoryId = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id) return res.status(400).json({ success: false, message: 'Category id required' });
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -365,6 +379,14 @@ exports.updateProductInfo = async (req, res) => {
     session.startTransaction();
 
     const { name, description, keyword, tag, categoryId } = req.body;
+
+    if (!name) return res.status(400).json({ success: false, message: 'Name required' });
+    if (!description) return res.status(400).json({ success: false, message: 'Description required' });
+    if (!keyword) return res.status(400).json({ success: false, message: 'Keyword required' });
+    if (!tag) return res.status(400).json({ success: false, message: 'Tag required' });
+    if (!categoryId) return res.status(400).json({ success: false, message: 'Category id required' });
+
+
     const productId = req.params.id;
 
     // Find the existing product by ID
@@ -411,6 +433,14 @@ exports.addSizeVariant = async (req, res) => {
       selling_price,
     } = req.body;
 
+    if (!name) return res.status(400).json({ success: false, message: 'Name required' });
+    if (!status) return res.status(400).json({ success: false, message: 'Status required' });
+    if (!stock) return res.status(400).json({ success: false, message: 'Stock required' });
+    if (!mrp) return res.status(400).json({ success: false, message: 'Mrp required' });
+    if (!selling_price) return res.status(400).json({ success: false, message: 'Selling price required' });
+    if (!req.params.id) return res.status(400).json({ success: false, message: 'Color variant id required' });
+
+
     const colorVariantId = req.params.id;
 
     const color_variant = await ColorVariant.findById(colorVariantId)
@@ -426,6 +456,7 @@ exports.addSizeVariant = async (req, res) => {
       selling_price,
       colorVariant: color_variant._id,
     })
+
     const AddedSizeVariant = await size_variants.save({ session });
     await session.commitTransaction();
 
@@ -455,6 +486,13 @@ exports.update_size_variant = async (req, res) => {
       mrp,
       selling_price,
     } = req.body;
+
+    if (!name) return res.status(400).json({ success: false, message: 'Name required' });
+    if (!status) return res.status(400).json({ success: false, message: 'Status required' });
+    if (!stock) return res.status(400).json({ success: false, message: 'Stock required' });
+    if (!mrp) return res.status(400).json({ success: false, message: 'Mrp required' });
+    if (!selling_price) return res.status(400).json({ success: false, message: 'Selling price required' });
+    if (!req.params.id) return res.status(400).json({ success: false, message: 'Size variant id required' });
 
     const sizeVariantId = req.params.id;
 
@@ -490,6 +528,10 @@ exports.update_thumbnail_image = async (req, res) => {
       path
     } = req.body;
 
+    if (!req.params.id) return res.status(400).json({ success: false, message: 'Color variant id required' });
+    if (!path) return res.status(400).json({ success: false, message: 'File path required' });
+    if (!req.files['thumbnail'][0]) return res.status(400).json({ success: false, message: 'Thumbnail required' });
+
     const colorVariantThumbnail = req.files['thumbnail'][0];
 
     //convert to webp with quality 20%
@@ -499,6 +541,7 @@ exports.update_thumbnail_image = async (req, res) => {
 
 
     let colorVariantThumbnailInfo;
+
     await uploadTos3(colorVariantThumbnailWebp).then((result) => {
       colorVariantThumbnailInfo = result;
     })
@@ -515,8 +558,7 @@ exports.update_thumbnail_image = async (req, res) => {
     await session.commitTransaction();
 
     if (updatedColorVariant) {
-      await deleteS3Object(path).then((result) => {
-      })
+      await deleteS3Object(path)
     }
 
     res.status(200).json(success("OK", updatedColorVariant,
@@ -532,6 +574,8 @@ exports.update_thumbnail_image = async (req, res) => {
 
 exports.add_color_variant_image = async (req, res) => {
   try {
+    if (req.files['image'][0]) return res.status(400).json({ success: false, message: 'Image required' });
+
     var session = await mongoose.startSession();
     session.startTransaction();
 
@@ -543,9 +587,11 @@ exports.add_color_variant_image = async (req, res) => {
       .toBuffer();
 
     let colorVariantImageInfo;
+
     await uploadTos3(colorVariantImageWebp).then((result) => {
       colorVariantImageInfo = result;
     })
+
     const color_variant = await ColorVariant.findById(req.params.id);
     if (!color_variant) return res.status(404).json(error("Color variant not found", res.statusCode));
 
@@ -578,6 +624,10 @@ exports.update_color_variant_image = async (req, res) => {
     const {
       filename
     } = req.body;
+
+    if (!req.params.id) return res.status(400).json({ success: false, message: 'Image id required' });
+    if (!req.files['image'][0]) return res.status(400).json({ success: false, message: 'Color variant image required' });
+
     const colorVariantImage = req.files['image'][0];
 
     //convert to webp with quality 20%
@@ -586,6 +636,7 @@ exports.update_color_variant_image = async (req, res) => {
       .toBuffer();
 
     let colorVariantImageInfo;
+
     await uploadTos3(colorVariantImageWebp).then((result) => {
       colorVariantImageInfo = result;
     })
@@ -596,12 +647,12 @@ exports.update_color_variant_image = async (req, res) => {
 
     image.url = colorVariantImageInfo.url;
     image.filename = colorVariantImageInfo.fileName;
+
     const updatedImage = await image.save({ session });
     await session.commitTransaction();
 
     if (updatedImage) {
-      await deleteS3Object(filename).then((result) => {
-      })
+      await deleteS3Object(filename)
     }
 
     res.status(200).json(success("OK",
@@ -621,6 +672,8 @@ exports.update_color_variant_image = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Product id required' });
+
 
     const result = await Product.deleteOne({ _id: id });
 

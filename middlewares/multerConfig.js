@@ -18,6 +18,7 @@ let uploadTos3 = (fileData) => {
     return new Promise((resolve, reject) => {
         const uuid = crypto.randomBytes(6).toString("hex");
         const fileName = `${uuid}_${Date.now().toString()}.webp`;
+
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: fileName,
@@ -25,31 +26,40 @@ let uploadTos3 = (fileData) => {
             ContentType: "image/webp"
         }
 
-        const request = s3.putObject(params);
-        request.on('httpHeaders', (statusCode, headers) => {
-            resolve({
-                url: `https://ipfs.filebase.io/ipfs/${headers['x-amz-meta-cid']}`,
-                fileName: fileName
-            })
-        });
-        request.on('httpError', (error, response) => {
-            reject(error)
-        });
-        request.send();
-    })
-}
-
-const deleteS3Object = async (path) => {
-    try {
-        const deleteParams = {
+        const bucketParams = {
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: path,
         };
 
-        const deleteResult = await s3.deleteObject(deleteParams).promise();
-    } catch (error) {
-        console.error('Error deleting object:', error);
-    }
+        s3.headBucket(bucketParams, function (err, data) {
+            if (err) {
+                // bucket might not exist or access is denied
+                reject('Bucket might not exist or access is denied');
+            } else {
+                // Bucket exists and accessible, you can proceed with putObject or other operations
+                const request = s3.putObject(params);
+                request.on('httpHeaders', (statusCode, headers) => {
+                    resolve({
+                        url: `https://ipfs.filebase.io/ipfs/${headers['x-amz-meta-cid']}`,
+                        fileName: fileName
+                    })
+                });
+                request.on('httpError', (error, response) => {
+                    console.log('request error', error)
+                    reject(error)
+                });
+                request.send();
+            }
+        });
+    })
+}
+const deleteS3Object = async (path) => {
+
+    const deleteParams = {
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: path,
+    };
+
+    await s3.deleteObject(deleteParams).promise();
 };
 
 module.exports = {
