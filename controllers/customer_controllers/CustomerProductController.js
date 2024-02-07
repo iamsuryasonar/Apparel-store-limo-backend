@@ -111,6 +111,9 @@ exports.getProductByCategoryId = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    const category = await Category.findById(id);
+    if (!category) return res.status(422).json(validation({ categoryId: "Invalid category id" }));
+
     const products = await Product.find({ category: id, isPublished: true })
       .populate({
         path: 'colorvariants',
@@ -120,7 +123,7 @@ exports.getProductByCategoryId = async (req, res) => {
       .limit(limit)
       .exec();
 
-    const totalProducts = await Product.countDocuments({ category: id, isPublished: true });
+    const totalProducts = products.length
 
     const totalPages = Math.ceil(totalProducts / limit);
 

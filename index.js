@@ -12,7 +12,7 @@ app.use(cors())
 const authMiddleware = require('./middlewares/authMiddleware');
 
 const { admin_auth_route, admin_product_route, admin_category_route, admin_order_route } = require('./routes/admin_routes');
-const { customer_auth_route, customer_product_route, cart_route, order_route } = require('./routes/customer_routes');
+const { customer_auth_route, customer_product_route, cart_route, order_route, category_route } = require('./routes/customer_routes');
 
 app.use(express.json());
 
@@ -61,6 +61,7 @@ app.use('/admin/api/v1/order', authMiddleware.authenticate, authMiddleware.restr
 app.use('/api/v1/product', customer_product_route);
 app.use('/api/v1/cart', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), cart_route);
 app.use('/api/v1/order', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), order_route);
+app.use('/api/v1/category', category_route);
 
 app.get('/', (req, res) => {
     res.send('Hello World!')

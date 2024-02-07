@@ -7,9 +7,8 @@ const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig')
 exports.getAllCategories = async (req, res) => {
     try {
         const categories = await Category.find();
-        res.status(200).json(success("OK", {
-            categories
-        },
+        res.status(200).json(success("OK",
+            categories,
             res.statusCode),
         );
     } catch (err) {
