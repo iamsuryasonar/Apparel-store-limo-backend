@@ -26,7 +26,7 @@ exports.customerRegistration = async (req, res) => {
     })
 
     const savedUser = await customer.save();
-    res.status(201).json(success("OK", {
+    res.status(201).json(success("User registered", {
     },
       res.statusCode),
     );

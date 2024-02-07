@@ -372,8 +372,8 @@ exports.getAllDeliveredOrders = async (req, res) => {
 };
 
 exports.updateOrderStatus = async (req, res) => {
+    let session = await mongoose.startSession();
     try {
-        let session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;

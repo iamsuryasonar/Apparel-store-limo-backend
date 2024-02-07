@@ -19,9 +19,9 @@ exports.getAllCategories = async (req, res) => {
 };
 
 exports.addCategory = async (req, res) => {
-    try {
     let session = await mongoose.startSession();
-    session.startTransaction();
+    try {
+        session.startTransaction();
 
         let { name } = req.body;
         if (!name) return res.status(400).json({ success: false, message: 'Name required' });
@@ -60,17 +60,16 @@ exports.addCategory = async (req, res) => {
             res.statusCode),
         );
     } catch (err) {
+        console.error(err);
         await session.abortTransaction();
         session.endSession();
-            return res.status(500).json(error("Something went wrong", res.statusCode));
-        } finally {
-            session.endSession();
-        }
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
 };
 
 exports.updateCategory = async (req, res) => { 
+    let session = await mongoose.startSession();
     try {
-        let session = await mongoose.startSession();
         session.startTransaction();
         const { id } = req.params;
         const {
@@ -127,8 +126,6 @@ exports.updateCategory = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
-    }finally {
-        session.endSession();
     }
 };
 

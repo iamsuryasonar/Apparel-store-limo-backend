@@ -72,5 +72,5 @@ app.listen(process.env.PORT, function () {
         https.get('https://limo-backend-e2jw.onrender.com/', (res) => {
             console.log(res.statusCode)
         })
-    }, 1 * 60 * 1000)
+    }, 14 * 60 * 1000)
 });

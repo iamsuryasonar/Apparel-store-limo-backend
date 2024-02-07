@@ -25,7 +25,7 @@ exports.adminRegistration = async (req, res) => {
     })
 
     const savedAdmin = await admin.save();
-    res.status(201).json(success("OK", {
+    res.status(201).json(success("Admin registered successfully", {
     },
       res.statusCode),
     );

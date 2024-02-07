@@ -26,30 +26,21 @@ let uploadTos3 = (fileData) => {
             ContentType: "image/webp"
         }
 
-        const bucketParams = {
-            Bucket: process.env.AWS_BUCKET_NAME,
-        };
+        const request = s3.putObject(params);
 
-        s3.headBucket(bucketParams, function (err, data) {
-            if (err) {
-                // bucket might not exist or access is denied
-                reject('Bucket might not exist or access is denied');
-            } else {
-                // Bucket exists and accessible, you can proceed with putObject or other operations
-                const request = s3.putObject(params);
-                request.on('httpHeaders', (statusCode, headers) => {
-                    resolve({
-                        url: `https://ipfs.filebase.io/ipfs/${headers['x-amz-meta-cid']}`,
-                        fileName: fileName
-                    })
-                });
-                request.on('httpError', (error, response) => {
-                    console.log('request error', error)
-                    reject(error)
-                });
-                request.send();
-            }
+        request.on('httpHeaders', (statusCode, headers) => {
+            console.log('status code ', statusCode);
+            resolve({
+                url: `https://ipfs.filebase.io/ipfs/${headers['x-amz-meta-cid']}`,
+                fileName: fileName
+            })
         });
+
+        request.on('httpError', (error, response) => {
+            reject(error)
+        });
+
+        request.send();
     })
 }
 const deleteS3Object = async (path) => {

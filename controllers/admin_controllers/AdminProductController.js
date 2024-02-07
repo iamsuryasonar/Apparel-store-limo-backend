@@ -6,10 +6,11 @@ const Image = require('../../models/Image');
 const sharp = require('sharp');
 const { uploadTos3, deleteS3Object } = require('../../middlewares/multerConfig');
 const { success, error, validation } = require('../../common/responseAPI')
+const mongoose = require("mongoose");
 
 exports.addProduct = async (req, res) => {
+  let session = await mongoose.startSession();
   try {
-    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -48,21 +49,18 @@ exports.addProduct = async (req, res) => {
       colorVariantThumbnailInfo = result;
     })
 
-    let imageUrlArr;
-    //convert each image to webp with quality 40%
+    let imageUrlArr = [];
     if (images?.length >= 1) {
-      imageUrlArr = await Promise.all(images.map(async (image) => {
-        try {
-          const webpImageBuffer = await sharp(image.buffer)
-            .webp([{ near_lossless: true }, { quality: 40 }])
-            .toBuffer();
+      for (var i = 0; i < images?.length; i++) {
+        //convert each image to webp with quality 40%
+        const webpImageBuffer = await sharp(images[i].buffer)
+          .webp([{ near_lossless: true }, { quality: 40 }])
+          .toBuffer();
 
-          const result = await uploadTos3(webpImageBuffer);
-          return result;
-        } catch (error) {
-          throw error;
-        }
-      }));
+        await uploadTos3(webpImageBuffer).then((result) => {
+          imageUrlArr.push(result);
+        })
+      }
     }
 
     const product = new Product({
@@ -84,29 +82,33 @@ exports.addProduct = async (req, res) => {
 
     await color_variant.save({ session });
 
-    imageUrlArr?.forEach(async (item) => {
+    const imagePromises = imageUrlArr?.map(async (item) => {
       const image = new Image({
         url: item.url,
         filename: item.fileName,
         colorVariant: color_variant._id,
-      })
-
+      });
       await image.save({ session });
+      return image;
+    });
 
-    }),
-      sizeVariants.forEach(async (size) => {
-        const size_variants = new SizeVariant({
-          name: JSON.parse(size).name,
-          mrp: JSON.parse(size).mrp,
-          selling_price: JSON.parse(size).selling_price,
-          stock: JSON.parse(size).stock,
-          status: JSON.parse(size).status,
-          colorVariant: color_variant._id,
-        })
+    await Promise.all(imagePromises);
 
-        await size_variants.save({ session });
+    const sizePromises = sizeVariants.map(async (size) => {
+      const sizeVariantData = JSON.parse(size);
+      const sizeVariant = new SizeVariant({
+        name: sizeVariantData.name,
+        mrp: sizeVariantData.mrp,
+        selling_price: sizeVariantData.selling_price,
+        stock: sizeVariantData.stock,
+        status: sizeVariantData.status,
+        colorVariant: color_variant._id,
+      });
+      await sizeVariant.save({ session });
+      return sizeVariant;
+    });
 
-      })
+    await Promise.all(sizePromises);
 
     const savedProduct = await product.save({ session });
     await session.commitTransaction();
@@ -125,9 +127,11 @@ exports.addProduct = async (req, res) => {
 };
 
 exports.addColorAndItsSizeVariant = async (req, res) => {
+  let session = await mongoose.startSession();
+  session.startTransaction();
+
+
   try {
-    let session = await mongoose.startSession();
-    session.startTransaction();
 
     const {
       productId,
@@ -136,6 +140,9 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
 
     if (!productId) return res.status(400).json({ success: false, message: 'Product id required' });
     if (!colorVariantName) return res.status(400).json({ success: false, message: 'color variant name required' });
+
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
 
     let sizeVariants = req.body.sizeVariants;
     if (!Array.isArray(sizeVariants)) {
@@ -157,26 +164,19 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
       colorVariantThumbnailInfo = result;
     })
 
-    let imageUrlArr;
-    //convert each image to webp with quality 40%
+    let imageUrlArr = [];
     if (images?.length >= 1) {
-      imageUrlArr = await Promise.all(images.map(async (image) => {
-        try {
-          const webpImageBuffer = await sharp(image.buffer)
-            .webp([{ near_lossless: true }, { quality: 40 }])
-            .toBuffer();
+      for (var i = 0; i < images?.length; i++) {
+        //convert each image to webp with quality 40%
+        const webpImageBuffer = await sharp(images[i].buffer)
+          .webp([{ near_lossless: true }, { quality: 40 }])
+          .toBuffer();
 
-          const result = await uploadTos3(webpImageBuffer);
-          return result;
-        } catch (error) {
-          console.error('Error processing image:', error);
-          throw error;
-        }
-      }));
+        await uploadTos3(webpImageBuffer).then((result) => {
+          imageUrlArr.push(result);
+        })
+      }
     }
-
-    const product = await Product.findById(productId);
-    if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
 
     const color_variant = new ColorVariant({
       name: colorVariantName,
@@ -189,45 +189,53 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
 
     await color_variant.save({ session });
 
-    imageUrlArr?.forEach(async (item) => {
+    const imagePromises = imageUrlArr?.map(async (item) => {
       const image = new Image({
         url: item.url,
         filename: item.fileName,
         colorVariant: color_variant._id,
-      })
-
+      });
       await image.save({ session });
+      return image;
+    });
 
-    }),
-      sizeVariants.forEach(async (size) => {
-        const size_variants = new SizeVariant({
-          name: JSON.parse(size).name,
-          mrp: JSON.parse(size).mrp,
-          selling_price: JSON.parse(size).selling_price,
-          stock: JSON.parse(size).stock,
-          status: JSON.parse(size).status,
-          colorVariant: color_variant._id,
-        })
+    await Promise.all(imagePromises);
 
-        await size_variants.save({ session });
-      })
-    await session.commitTransaction();
-    session.endSession();
+    const sizePromises = sizeVariants.map(async (size) => {
+      const sizeVariantData = JSON.parse(size);
+      const sizeVariant = new SizeVariant({
+        name: sizeVariantData.name,
+        mrp: sizeVariantData.mrp,
+        selling_price: sizeVariantData.selling_price,
+        stock: sizeVariantData.stock,
+        status: sizeVariantData.status,
+        colorVariant: color_variant._id,
+      });
+      await sizeVariant.save({ session });
+      return sizeVariant;
+    });
+
+    await Promise.all(sizePromises);
+
     const updatedProduct = await Product.findById(productId)
       .populate({
         path: 'colorvariants',
         populate: ['images', 'sizevariants']
       });
 
-    res.status(201).json(success("OK", {
+    await session.commitTransaction();
+
+    return res.status(201).json(success("OK", {
       updatedProduct
     },
       res.statusCode),
     );
   } catch (err) {
+    console.log(err)
     await session.abortTransaction();
-    session.endSession();
     return res.status(500).json(error("Something went wrong", res.statusCode));
+  } finally {
+    session.endSession();
   }
 };
 
@@ -371,17 +379,17 @@ exports.getProductsByCategoryId = async (req, res) => {
 
 
 exports.updateProductInfo = async (req, res) => {
+  let session = await mongoose.startSession();
   try {
-    let session = await mongoose.startSession();
     session.startTransaction();
 
-    const { name, description, keyword, tag, categoryId } = req.body;
+    const { name, description, keyword, tag, category } = req.body;
 
     if (!name) return res.status(400).json({ success: false, message: 'Name required' });
     if (!description) return res.status(400).json({ success: false, message: 'Description required' });
     if (!keyword) return res.status(400).json({ success: false, message: 'Keyword required' });
     if (!tag) return res.status(400).json({ success: false, message: 'Tag required' });
-    if (!categoryId) return res.status(400).json({ success: false, message: 'Category id required' });
+    if (!category) return res.status(400).json({ success: false, message: 'Category id required' });
 
 
     const productId = req.params.id;
@@ -398,7 +406,7 @@ exports.updateProductInfo = async (req, res) => {
     existingProduct.description = description;
     existingProduct.keyword = keyword;
     existingProduct.tag = tag;
-    existingProduct.category = categoryId;
+    existingProduct.category = category;
 
     const updatedProduct = await existingProduct.save({ session });
     await session.commitTransaction();
@@ -417,8 +425,8 @@ exports.updateProductInfo = async (req, res) => {
 
 
 exports.addSizeVariant = async (req, res) => {
+  let session = await mongoose.startSession();
   try {
-    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -470,8 +478,8 @@ exports.addSizeVariant = async (req, res) => {
 
 exports.update_size_variant = async (req, res) => {
 
+  let session = await mongoose.startSession();
   try {
-    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -515,8 +523,8 @@ exports.update_size_variant = async (req, res) => {
 };
 
 exports.update_thumbnail_image = async (req, res) => {
+  let session = await mongoose.startSession();
   try {
-    let session = await mongoose.startSession();
     session.startTransaction();
     const {
       path
@@ -566,10 +574,10 @@ exports.update_thumbnail_image = async (req, res) => {
 }
 
 exports.add_color_variant_image = async (req, res) => {
+  let session = await mongoose.startSession();
   try {
     if (req.files['image'][0]) return res.status(400).json({ success: false, message: 'Image required' });
 
-    let session = await mongoose.startSession();
     session.startTransaction();
 
     const colorVariantImage = req.files['image'][0];
@@ -609,8 +617,8 @@ exports.add_color_variant_image = async (req, res) => {
 }
 
 exports.update_color_variant_image = async (req, res) => {
+  let session = await mongoose.startSession();
   try {
-    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
