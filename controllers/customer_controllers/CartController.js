@@ -7,7 +7,7 @@ exports.addToCart = async (req, res) => {
 
     try {
         // Todo: should not add same product-sizeVariant twice
-        var session = await mongoose.startSession();
+        let session = await mongoose.startSession();
         session.startTransaction();
 
         let { quantity, productId, colorVariantId, sizeVariantId } = req.body;
@@ -28,6 +28,7 @@ exports.addToCart = async (req, res) => {
         );
 
         await session.commitTransaction();
+        session.endSession();
 
         res.status(201).json(success("OK", {
             cart
@@ -37,6 +38,7 @@ exports.addToCart = async (req, res) => {
     } catch (err) {
         console.log(err);
         await session.abortTransaction();
+        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     } finally {
         session.endSession();
@@ -66,7 +68,7 @@ exports.getAllItemsInCart = async (req, res) => {
 
 exports.updateProductQuantity = async (req, res) => {
     try {
-        var session = await mongoose.startSession();
+        let session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;
@@ -96,6 +98,7 @@ exports.updateProductQuantity = async (req, res) => {
         cartItem[0].save({ session });
 
         await session.commitTransaction();
+        session.endSession();
 
         res.status(201).json(success("OK", {
             cartItem
@@ -105,6 +108,7 @@ exports.updateProductQuantity = async (req, res) => {
     } catch (err) {
         console.log(err)
         await session.abortTransaction();
+        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     } finally {
         session.endSession();
@@ -113,7 +117,7 @@ exports.updateProductQuantity = async (req, res) => {
 
 exports.removeItemFromCart = async (req, res) => {
     try {
-        var session = await mongoose.startSession();
+        let session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;
@@ -126,6 +130,7 @@ exports.removeItemFromCart = async (req, res) => {
         let deletedItem = await Item.deleteOne({ _id: req.params.id, isOrdered: false }, { session });
 
         await session.commitTransaction();
+        session.endSession();
 
         res.status(201).json(success("OK", {
             deletedItem
@@ -135,6 +140,7 @@ exports.removeItemFromCart = async (req, res) => {
     } catch (err) {
         console.log(err)
         await session.abortTransaction();
+        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     } finally {
         session.endSession();

@@ -373,7 +373,7 @@ exports.getAllDeliveredOrders = async (req, res) => {
 
 exports.updateOrderStatus = async (req, res) => {
     try {
-        var session = await mongoose.startSession();
+        let session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;
@@ -389,7 +389,7 @@ exports.updateOrderStatus = async (req, res) => {
         order.status = status;
         await order.save({ session });
         await session.commitTransaction();
-
+        session.endSession();
         res.status(200).json(success("OK", {
             order
         },
@@ -397,6 +397,7 @@ exports.updateOrderStatus = async (req, res) => {
         );
     } catch (err) {
         await session.abortTransaction();
+        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     } finally {
         session.endSession();

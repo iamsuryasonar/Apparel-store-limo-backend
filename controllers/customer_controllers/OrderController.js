@@ -7,7 +7,7 @@ const SizeVariant = require('../../models/SizeVariant')
 
 exports.createOrder = async (req, res) => {
     try {
-        var session = await mongoose.startSession();
+        let session = await mongoose.startSession();
         session.startTransaction();
 
         let {
@@ -72,6 +72,7 @@ exports.createOrder = async (req, res) => {
             .exec();
 
         await session.commitTransaction();
+        session.endSession();
 
         res.status(201).json(success("OK", {
             allOrders
@@ -81,6 +82,7 @@ exports.createOrder = async (req, res) => {
     } catch (err) {
         console.log(err)
         await session.abortTransaction();
+        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     } finally {
         session.endSession();
@@ -115,7 +117,7 @@ exports.getOrdereditems = async (req, res) => {
 
 exports.cancelOrder = async (req, res) => {
     try {
-        var session = await mongoose.startSession();
+        let session = await mongoose.startSession();
         session.startTransaction();
 
         const { id } = req.params;
@@ -128,6 +130,7 @@ exports.cancelOrder = async (req, res) => {
         const cancelledOrderedItems = await orderedItem[0].save({ session });
 
         await session.commitTransaction();
+        session.endSession();
 
         res.status(200).json(success("OK", {
             cancelledOrderedItems
@@ -138,6 +141,7 @@ exports.cancelOrder = async (req, res) => {
     } catch (err) {
         console.log(err);
         await session.abortTransaction();
+        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     } finally {
         session.endSession();

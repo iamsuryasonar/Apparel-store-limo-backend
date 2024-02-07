@@ -9,7 +9,7 @@ const { success, error, validation } = require('../../common/responseAPI')
 
 exports.addProduct = async (req, res) => {
   try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -110,6 +110,7 @@ exports.addProduct = async (req, res) => {
 
     const savedProduct = await product.save({ session });
     await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json(success("OK", {
       product: savedProduct
@@ -118,15 +119,14 @@ exports.addProduct = async (req, res) => {
     );
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
 exports.addColorAndItsSizeVariant = async (req, res) => {
   try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -136,8 +136,6 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
 
     if (!productId) return res.status(400).json({ success: false, message: 'Product id required' });
     if (!colorVariantName) return res.status(400).json({ success: false, message: 'color variant name required' });
-
-
 
     let sizeVariants = req.body.sizeVariants;
     if (!Array.isArray(sizeVariants)) {
@@ -214,7 +212,7 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
         await size_variants.save({ session });
       })
     await session.commitTransaction();
-
+    session.endSession();
     const updatedProduct = await Product.findById(productId)
       .populate({
         path: 'colorvariants',
@@ -228,9 +226,8 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
     );
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -375,7 +372,7 @@ exports.getProductsByCategoryId = async (req, res) => {
 
 exports.updateProductInfo = async (req, res) => {
   try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
     const { name, description, keyword, tag, categoryId } = req.body;
@@ -405,7 +402,7 @@ exports.updateProductInfo = async (req, res) => {
 
     const updatedProduct = await existingProduct.save({ session });
     await session.commitTransaction();
-
+    session.endSession();
     res.status(200).json(success("OK", {
       updatedProduct
     },
@@ -413,16 +410,15 @@ exports.updateProductInfo = async (req, res) => {
     );
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
 
 exports.addSizeVariant = async (req, res) => {
   try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -459,16 +455,15 @@ exports.addSizeVariant = async (req, res) => {
 
     const AddedSizeVariant = await size_variants.save({ session });
     await session.commitTransaction();
-
+    session.endSession();
     res.status(200).json(success("OK",
       AddedSizeVariant,
       res.statusCode),
     );
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
@@ -476,7 +471,7 @@ exports.addSizeVariant = async (req, res) => {
 exports.update_size_variant = async (req, res) => {
 
   try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -507,22 +502,21 @@ exports.update_size_variant = async (req, res) => {
 
     const updatedSizeVariant = await size_variant.save({ session });
     await session.commitTransaction();
-
+    session.endSession();
     res.status(200).json(success("OK", updatedSizeVariant,
       res.statusCode),
     );
 
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
 
 exports.update_thumbnail_image = async (req, res) => {
   try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
     const {
       path
@@ -556,7 +550,7 @@ exports.update_thumbnail_image = async (req, res) => {
 
     const updatedColorVariant = await color_variant.save({ session });
     await session.commitTransaction();
-
+    session.endSession();
     if (updatedColorVariant) {
       await deleteS3Object(path)
     }
@@ -566,9 +560,8 @@ exports.update_thumbnail_image = async (req, res) => {
     );
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 }
 
@@ -576,7 +569,7 @@ exports.add_color_variant_image = async (req, res) => {
   try {
     if (req.files['image'][0]) return res.status(400).json({ success: false, message: 'Image required' });
 
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
     const colorVariantImage = req.files['image'][0];
@@ -603,22 +596,21 @@ exports.add_color_variant_image = async (req, res) => {
 
     const newImage = await image.save({ session });
     await session.commitTransaction();
-
+    session.endSession();
     res.status(200).json(success("OK", newImage,
       res.statusCode),
     );
 
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 }
 
 exports.update_color_variant_image = async (req, res) => {
   try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
     const {
@@ -650,6 +642,7 @@ exports.update_color_variant_image = async (req, res) => {
 
     const updatedImage = await image.save({ session });
     await session.commitTransaction();
+    session.endSession();
 
     if (updatedImage) {
       await deleteS3Object(filename)
@@ -662,9 +655,8 @@ exports.update_color_variant_image = async (req, res) => {
 
   } catch (err) {
     await session.abortTransaction();
-    return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
     session.endSession();
+    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 }
 

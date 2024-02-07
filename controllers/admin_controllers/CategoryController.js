@@ -20,7 +20,7 @@ exports.getAllCategories = async (req, res) => {
 
 exports.addCategory = async (req, res) => {
     try {
-    var session = await mongoose.startSession();
+    let session = await mongoose.startSession();
     session.startTransaction();
 
         let { name } = req.body;
@@ -52,6 +52,7 @@ exports.addCategory = async (req, res) => {
         );
 
         await session.commitTransaction();
+        session.endSession();
 
         res.status(201).json(success("OK", {
             categories
@@ -59,7 +60,8 @@ exports.addCategory = async (req, res) => {
             res.statusCode),
         );
     } catch (err) {
-            await session.abortTransaction();
+        await session.abortTransaction();
+        session.endSession();
             return res.status(500).json(error("Something went wrong", res.statusCode));
         } finally {
             session.endSession();
@@ -68,7 +70,7 @@ exports.addCategory = async (req, res) => {
 
 exports.updateCategory = async (req, res) => { 
     try {
-        var session = await mongoose.startSession();
+        let session = await mongoose.startSession();
         session.startTransaction();
         const { id } = req.params;
         const {
@@ -110,6 +112,7 @@ exports.updateCategory = async (req, res) => {
         
         const updatedCategory = await category.save({ session });
         await session.commitTransaction();
+        session.endSession();
 
         if (path && updatedCategory) { 
             await deleteS3Object(path)
@@ -122,6 +125,7 @@ exports.updateCategory = async (req, res) => {
         );
     } catch (err) {
         await session.abortTransaction();
+        session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }finally {
         session.endSession();
