@@ -1,6 +1,7 @@
 const Product = require('../../models/Product');
 const Category = require('../../models/Category');
 const { success, error, validation } = require('../../common/responseAPI')
+const mongoose = require('mongoose');
 
 exports.getAllProduct = async (req, res) => {
 
@@ -114,21 +115,71 @@ exports.getProductByCategoryId = async (req, res) => {
     const category = await Category.findById(id);
     if (!category) return res.status(422).json(validation({ categoryId: "Invalid category id" }));
 
-    const products = await Product.find({ category: id, isPublished: true })
-      .populate({
-        path: 'colorvariants',
-        populate: ['images', 'sizevariants']
-      })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+    const { from, to, sort_type } = req.query;
+    const products = await Product.aggregate([
+      {
+        $match: {
+          category: mongoose.Types.ObjectId(id),
+        }
+      },
+      {
+        $lookup: {
+          from: "colorvariants",
+          localField: "_id",
+          foreignField: "product",
+          as: "colorVariants"
+        }
+      },
+      {
+        $unwind: "$colorVariants"
+      },
+      {
+        $lookup: {
+          from: "sizevariants",
+          localField: "colorVariants._id",
+          foreignField: "colorVariant",
+          as: "sizeVariants"
+        }
+      },
+      {
+        $unwind: "$sizeVariants"
+      },
+      {
+        $match: {
+          'sizeVariants.selling_price': {
+            $gt: Number(from),
+            $lt: Number(to)
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "images",
+          localField: "colorVariants._id",
+          foreignField: "colorVariant",
+          as: "images"
+        }
+      },
+      {
+        $facet: {
+          count: [
+            { $group: { _id: null, count: { $sum: 1 } } },
+          ],
+          matchedResults: [
+            { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
+            { $skip: skip },
+            ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizeVariants.selling_price': 1 } }] : []),
+            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizeVariants.selling_price': -1 } }] : [])
+          ],
+        },
+      },
+    ]);
 
-    const totalProducts = products.length
-
+    const totalProducts = products[0]?.count[0]?.count;
     const totalPages = Math.ceil(totalProducts / limit);
 
     res.status(200).json(success("OK", {
-      products,
+      products: products[0].matchedResults,
       pagination: {
         page_no: page,
         per_page: limit,
@@ -180,76 +231,5 @@ exports.getProductsByName = async (req, res) => {
   } catch (err) {
     return res.status(500).json(error("Something went wrong", res.statusCode));
 
-  }
-};
-
-exports.getProductsByPrice = async (req, res) => {
-  try {
-    const { from, to } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const products = await Product.aggregate([
-      {
-        $lookup: {
-          from: "colorvariants",
-          localField: "_id",
-          foreignField: "product",
-          as: "colorVariants"
-        }
-      },
-      {
-        $unwind: "$colorVariants"
-      },
-      {
-        $lookup: {
-          from: "sizevariants",
-          localField: "colorVariants._id",
-          foreignField: "colorVariant",
-          as: "sizeVariants"
-        }
-      },
-      {
-        $unwind: "$sizeVariants"
-      },
-      {
-        $match: {
-          'sizeVariants.selling_price': {
-            $gt: Number(from),
-            $lt: Number(to)
-          }
-        }
-      },
-      {
-        $facet: {
-          count: [
-            { $group: { _id: null, count: { $sum: 1 } } },
-          ],
-          matchedResults: [
-            { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
-            { $skip: skip },
-          ],
-        },
-      },
-    ]);
-
-    const totalProducts = products[0].count[0].count;
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    res.status(200).json(success("OK", {
-      products: products[0].matchedResults,
-      pagination: {
-        page_no: page,
-        per_page: limit,
-        total_products: totalProducts,
-        total_pages: totalPages,
-      },
-    },
-      res.statusCode),
-    );
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
