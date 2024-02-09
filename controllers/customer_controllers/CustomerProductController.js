@@ -47,10 +47,12 @@ exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await Product.findOne({ _id: id, isPublished: true }).populate({
-      path: 'colorvariants',
-      populate: ['images', 'sizevariants']
-    })
+    const product = await Product.findOne({ _id: id, isPublished: true })
+      .populate('category')
+      .populate({
+        path: 'colorvariants',
+        populate: ['images', 'sizevariants']
+      })
       .exec();
 
     if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
@@ -121,6 +123,17 @@ exports.getProductByCategoryId = async (req, res) => {
         $match: {
           category: mongoose.Types.ObjectId(id),
         }
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category"
+        }
+      },
+      {
+        $unwind: "$category"
       },
       {
         $lookup: {
