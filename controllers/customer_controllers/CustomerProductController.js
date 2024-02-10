@@ -111,7 +111,7 @@ exports.getProductByCategoryId = async (req, res) => {
   try {
     const { id } = req.params;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
 
     const category = await Category.findById(id);
@@ -179,11 +179,11 @@ exports.getProductByCategoryId = async (req, res) => {
             { $group: { _id: null, count: { $sum: 1 } } },
           ],
           matchedResults: [
-            { $sample: { size: 10 } },
             { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
             { $skip: skip },
+            { $sample: { size: limit } },
             ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizeVariants.selling_price': 1 } }] : []),
-            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizeVariants.selling_price': -1 } }] : [])
+            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizeVariants.selling_price': -1 } }] : []),
           ],
         },
       },
@@ -191,6 +191,7 @@ exports.getProductByCategoryId = async (req, res) => {
 
     const totalProducts = products[0]?.count[0]?.count;
     const totalPages = Math.ceil(totalProducts / limit);
+    console.log(products[0].matchedResults)
 
     res.status(200).json(success("OK", {
       products: products[0].matchedResults,
@@ -204,6 +205,7 @@ exports.getProductByCategoryId = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
+    console.log(err)
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
