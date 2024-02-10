@@ -121,21 +121,21 @@ exports.getProductByCategoryId = async (req, res) => {
     const products = await Product.aggregate([
       {
         $match: {
-          category: mongoose.Types.ObjectId(id),
+          category: mongoose.Types.ObjectId(id),// Match documents based on the provided category ID
         }
       },
       {
-        $lookup: {
+        $lookup: { // Perform a lookup to fetch category details
           from: "categories",
           localField: "category",
           foreignField: "_id",
           as: "category"
         }
       },
-      {
+      {// Unwind the category array to obtain individual category details
         $unwind: "$category"
       },
-      {
+      {// Lookup to fetch color variants related to the product
         $lookup: {
           from: "colorvariants",
           localField: "_id",
@@ -143,10 +143,10 @@ exports.getProductByCategoryId = async (req, res) => {
           as: "colorVariants"
         }
       },
-      {
+      {// Unwind the colorVariants array
         $unwind: "$colorVariants"
       },
-      {
+      {// Lookup to fetch size variants based on color variants
         $lookup: {
           from: "sizevariants",
           localField: "colorVariants._id",
@@ -154,10 +154,10 @@ exports.getProductByCategoryId = async (req, res) => {
           as: "sizeVariants"
         }
       },
-      {
+      {// Unwind the sizeVariants array
         $unwind: "$sizeVariants"
       },
-      {
+      {// Filter documents based on selling price within the specified range
         $match: {
           'sizeVariants.selling_price': {
             $gt: Number(from),
@@ -165,7 +165,7 @@ exports.getProductByCategoryId = async (req, res) => {
           }
         }
       },
-      {
+      {// Lookup to fetch images related to color variants
         $lookup: {
           from: "images",
           localField: "colorVariants._id",
@@ -174,14 +174,49 @@ exports.getProductByCategoryId = async (req, res) => {
         }
       },
       {
-        $facet: {
-          count: [
+        $addFields: {
+          imagesCount: { $size: "$images" }, // Get the size of the images array and gets product information and assigns to keys
+          _id: "$_id",
+          name: "$name",
+          description: "$description",
+          tag: "$tag",
+          keyword: "$keyword",
+        }
+      },
+      {
+        $addFields: {
+          randomIndex: { $floor: { $multiply: ["$imagesCount", { $rand: {} }] } } // Generate a random index
+        }
+      },
+      {
+        $addFields: {
+          randomizedImages: { $arrayElemAt: ["$images", "$randomIndex"] } // Get the image at the random index
+        }
+      },
+      {
+        $project: {
+          category: 1,
+          colorVariants: 1,
+          sizeVariants: 1,
+          image: "$randomizedImages", // Assign the randomized image to the image
+          _id: 1,
+          name: 1,
+          description: 1,
+          tag: 1,
+          keyword: 1,
+        }
+      },
+      {
+        $facet: {// Use $facet to perform multiple aggregations within a single stage
+          count: [// Count the total number of matched documents
             { $group: { _id: null, count: { $sum: 1 } } },
           ],
-          matchedResults: [
+          // Retrieve matched results based on selling price range
+          matchedResults: [// Filter documents based on selling price range
             { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
-            { $skip: skip },
-            { $sample: { size: limit } },
+            { $skip: skip },// Skip documents for pagination
+            { $sample: { size: limit } },// Randomly select documents up to the specified limit
+            // Sort the results based on sort_type
             ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizeVariants.selling_price': 1 } }] : []),
             ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizeVariants.selling_price': -1 } }] : []),
           ],
