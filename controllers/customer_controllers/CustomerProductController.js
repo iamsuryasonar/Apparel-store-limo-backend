@@ -179,6 +179,7 @@ exports.getProductByCategoryId = async (req, res) => {
             { $group: { _id: null, count: { $sum: 1 } } },
           ],
           matchedResults: [
+            { $sample: { size: 10 } },
             { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
             { $skip: skip },
             ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizeVariants.selling_price': 1 } }] : []),
