@@ -1,5 +1,6 @@
 const multer = require('multer');
 const crypto = require('crypto');
+const config = require('../config')
 
 const { s3 } = require('../common/s3config');
 
@@ -20,7 +21,7 @@ let uploadTos3 = (fileData) => {
         const fileName = `${uuid}_${Date.now().toString()}.webp`;
 
         const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
+            Bucket: config.aws.bucketName,
             Key: fileName,
             Body: fileData,
             ContentType: "image/webp"
@@ -29,7 +30,6 @@ let uploadTos3 = (fileData) => {
         const request = s3.putObject(params);
 
         request.on('httpHeaders', (statusCode, headers) => {
-            console.log('status code ', statusCode);
             resolve({
                 url: `https://ipfs.filebase.io/ipfs/${headers['x-amz-meta-cid']}`,
                 fileName: fileName
@@ -46,7 +46,7 @@ let uploadTos3 = (fileData) => {
 const deleteS3Object = async (path) => {
 
     const deleteParams = {
-        Bucket: process.env.AWS_BUCKET_NAME,
+        Bucket: config.aws.bucketName,
         Key: path,
     };
 

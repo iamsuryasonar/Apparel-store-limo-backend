@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
+    // price that was on the time the order was made.
     lockedprice: {
         type: Number,
         required: true,
     },
+    // selling_price that was on the time the order was made * quantity of item purchased
     totalamount: {
         type: Number,
         required: true,
@@ -19,6 +21,7 @@ const orderSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    // deliveredAt: {type:Date,} this property needs to be added
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
     address: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
     item: { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },

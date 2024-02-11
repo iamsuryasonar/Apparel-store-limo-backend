@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Customer = require('../models/Customer');
 const { error } = require('../common/responseAPI')
+const config = require('../config')
+const {verifyToken} = require('../utils/verifyToken');
 
 // Middleware to authenticate Admin and Customer based on their role
 const authenticate = async (req, res, next) => {
@@ -12,7 +14,7 @@ const authenticate = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
 
     try {
-        const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+        const decodedToken = verifyToken(token);
         if (decodedToken.role === 'ADMIN') {
             // If role is admin, find the admin by id
             const admin = await Admin.findById(decodedToken._id);

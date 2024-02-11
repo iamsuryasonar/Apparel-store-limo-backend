@@ -1,10 +1,11 @@
 // Reset user password: POST /reset-password
 // Change user password: PUT /change-password
-
+const config = require('../../config')
 const Admin = require('../../models/Admin');
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const { success, error, validation } = require('../../common/responseAPI')
+const { generateToken } = require('../../utils/generateToken')
 
 exports.adminRegistration = async (req, res) => {
   try {
@@ -29,7 +30,7 @@ exports.adminRegistration = async (req, res) => {
     },
       res.statusCode),
     );
-  } catch (error) {
+  } catch (err) {
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 
@@ -49,7 +50,7 @@ exports.adminLogIn = async (req, res) => {
     const matched = await bcrypt.compare(req.body.password, admin.password);
     if (!matched) return res.status(400).json(error("Invalid Password", res.statusCode));
 
-    const token = jwt.sign({ _id: admin._id, role: admin.role, exp: Math.floor(Date.now() / 1000) + 3 * 3600, }, process.env.TOKEN_SECRET,)
+    const token = generateToken({ _id: admin._id, role: admin.role })
     const userinfo = {
       'name': admin.name,
       'email': admin.email,
@@ -60,7 +61,8 @@ exports.adminLogIn = async (req, res) => {
     },
       res.statusCode),
     );
-  } catch (error) {
+  } catch (err) {
+    console.log(err)
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };

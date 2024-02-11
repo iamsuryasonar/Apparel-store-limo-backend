@@ -284,6 +284,7 @@ exports.getProductById = async (req, res) => {
     const { id } = req.params;
 
     const product = await Product.findById(id)
+      .populate('category')
       .populate({
         path: 'colorvariants',
         populate: ['images', 'sizevariants']

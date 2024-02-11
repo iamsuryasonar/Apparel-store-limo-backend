@@ -18,6 +18,10 @@ const sizeVariantSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    totalSold: {
+        type: Number,
+        default: 0,
+    },
     status: {
         type: String,
         required: true,
@@ -31,5 +35,9 @@ const sizeVariantSchema = new mongoose.Schema({
     colorVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'ColorVariant' }
 });
 
+sizeVariantSchema.virtual('qtyLeft').get(function () {
+    const item = this;
+    return item.stock - item.totalSold;
+})
 
 module.exports = mongoose.model('SizeVariant', sizeVariantSchema);

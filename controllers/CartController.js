@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
-const { success, error, validation } = require('../../common/responseAPI')
-const Item = require('../../models/Item')
-const Product = require('../../models/Product')
+const { success, error, validation } = require('../common/responseAPI')
+const Item = require('../models/Item')
+const Product = require('../models/Product')
 
 exports.addToCart = async (req, res) => {
 
