@@ -4,7 +4,7 @@ const SizeVariant = require('../models/SizeVariant');
 const ColorVariant = require('../models/ColorVariant');
 const Image = require('../models/Image');
 const sharp = require('sharp');
-const { uploadTos3, deleteS3Object } = require('../middlewares/multerConfig');
+const { uploadTos3, deleteS3Object } = require('../utils/s3');
 const { success, error, validation } = require('../common/responseAPI')
 const mongoose = require("mongoose");
 
@@ -27,7 +27,7 @@ exports.getAllProducts = async (req, res) => {
       .limit(limit)
       .exec();
 
-    const totalProducts = await Product.countDocuments({ isPublished: true });
+    const totalProducts = products.length;
 
     const totalPages = Math.ceil(totalProducts / limit);
 

@@ -6,6 +6,10 @@ const Address = require('../models/Address')
 const SizeVariant = require('../models/SizeVariant')
 const { FILTER_ITEMS, ORDER_STATUS } = require('../common/constants')
 
+// @desc    Create order
+// @route   POST /api/v1/order/
+// @access  Private/Customer
+
 exports.createOrder = async (req, res) => {
     try {
         let session = await mongoose.startSession();
@@ -90,6 +94,10 @@ exports.createOrder = async (req, res) => {
     }
 };
 
+// @desc    Cancel order
+// @route   PUT /api/v1/order/:id
+// @access  Private/Customer
+
 exports.cancelOrder = async (req, res) => {
     try {
         let session = await mongoose.startSession();
@@ -123,6 +131,10 @@ exports.cancelOrder = async (req, res) => {
     }
 };
 
+// @desc    Get ordered items
+// @route   GET /api/v1/order/orders/ordered
+// @access  Private/Customer
+
 exports.getOrdereditemsOfUser = async (req, res) => {
     try {
         const customerId = req.user._id;
@@ -149,6 +161,9 @@ exports.getOrdereditemsOfUser = async (req, res) => {
     }
 };
 
+// @desc    Get cancelled order
+// @route   GET /api/v1/order/orders/cancelled
+// @access  Private/Customer
 
 exports.getCancelledOrdersOfUser = async (req, res) => {
 
@@ -180,6 +195,10 @@ exports.getCancelledOrdersOfUser = async (req, res) => {
     }
 };
 
+// @desc    Get an order
+// @route   GET /api/v1/order/:id
+// @access  Private/Customer
+
 exports.getAnOrder = async (req, res) => {
     try {
         const id = req.params.id
@@ -209,6 +228,10 @@ exports.getAnOrder = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
+
+// @desc    Get all orders in past
+// @route   GET /api/v1/order/
+// @access  Private/Customer
 
 exports.getAllOrders = async (req, res) => {
     try {
@@ -267,6 +290,10 @@ exports.getAllOrders = async (req, res) => {
     }
 };
 
+// @desc    Get order by status
+// @route   GET /api/v1/order/status/:status
+// @access  Private/Customer
+
 exports.getAllOrdersByStatus = async (req, res) => {
     try {
         const status = req.params.status
@@ -324,6 +351,10 @@ exports.getAllOrdersByStatus = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
+
+// @desc    Update order status
+// @route   PUT /api/v1/order/status/:id
+// @access  Private/Customer
 
 
 exports.updateOrderStatus = async (req, res) => {

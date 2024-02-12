@@ -1,5 +1,10 @@
 const Category = require('../models/Category');
 const { success, error } = require('../common/responseAPI')
+const { uploadTos3 } = require('../utils/s3')
+
+// @desc   Get all categories
+// @route   GET /api/v1/category/
+// @access  Public
 
 exports.getAllCategories = async (req, res) => {
     try {
@@ -10,6 +15,10 @@ exports.getAllCategories = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
+
+// @desc   Add category
+// @route   POST /api/v1/category/
+// @access  Admin/Private
 
 exports.addCategory = async (req, res) => {
     let session = await mongoose.startSession();
@@ -59,6 +68,10 @@ exports.addCategory = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
+
+// @desc   Update category
+// @route   PUT /api/v1/category/
+// @access  Admin/Private
 
 exports.updateCategory = async (req, res) => { 
     let session = await mongoose.startSession();
@@ -123,6 +136,10 @@ exports.updateCategory = async (req, res) => {
 };
 
 //category is related to products it should not be deleted.
+
+// @desc   Delete category
+// @route   DELETE /api/v1/category/:id
+// @access  Admin/Private
 
 // exports.deleteCategory = async (req, res) => {
 //     try {

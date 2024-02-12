@@ -8,6 +8,9 @@ const { success, error, validation } = require('../common/responseAPI')
 const Admin = require('../models/Admin');
 const { generateToken } = require('../utils/generateToken')
 
+// @desc   Admin registration
+// @route   POST /api/v1/auth/admin_register
+// @access  Public
 
 exports.adminRegistration = async (req, res) => {
   try {
@@ -37,6 +40,10 @@ exports.adminRegistration = async (req, res) => {
   }
 
 };
+
+// @desc   Admin login
+// @route   POST /api/v1/auth/admin_login
+// @access  Public
 
 exports.adminLogIn = async (req, res) => {
   try {
@@ -69,6 +76,9 @@ exports.adminLogIn = async (req, res) => {
   }
 };
 
+// @desc   Customer registration
+// @route   POST /api/v1/auth/customer_register
+// @access  Public
 
 exports.customerRegistration = async (req, res) => {
   try {
@@ -98,6 +108,10 @@ exports.customerRegistration = async (req, res) => {
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
+
+// @desc   Customer login
+// @route   POST /api/v1/auth/customer_register
+// @access  Public
 
 exports.customerLogIn = async (req, res) => {
   try {

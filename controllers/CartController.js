@@ -3,6 +3,10 @@ const { success, error, validation } = require('../common/responseAPI')
 const Item = require('../models/Item')
 const Product = require('../models/Product')
 
+// @desc   Add to cart
+// @route   POST /api/v1/cart/
+// @access  Private/Customer
+
 exports.addToCart = async (req, res) => {
 
     try {
@@ -45,6 +49,10 @@ exports.addToCart = async (req, res) => {
     }
 };
 
+// @desc   Get all items in cart
+// @route   GET /api/v1/cart/
+// @access  Private/Customer
+
 exports.getAllItemsInCart = async (req, res) => {
     try {
         const customerId = req.user._id;
@@ -65,6 +73,10 @@ exports.getAllItemsInCart = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
+
+// @desc   Update quatify of item in cart
+// @route   PUT /api/v1/cart/:id
+// @access  Private/Customer
 
 exports.updateProductQuantity = async (req, res) => {
     try {
@@ -114,6 +126,10 @@ exports.updateProductQuantity = async (req, res) => {
         session.endSession();
     }
 };
+
+// @desc    Remove item from cart
+// @route   PUT /api/v1/cart/:id
+// @access  Private/Customer
 
 exports.removeItemFromCart = async (req, res) => {
     try {
