@@ -89,9 +89,7 @@ exports.createOrder = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
-    } finally {
-        session.endSession();
-    }
+    } 
 };
 
 // @desc    Cancel order
@@ -126,9 +124,7 @@ exports.cancelOrder = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
-    } finally {
-        session.endSession();
-    }
+    } 
 };
 
 // @desc    Get ordered items
@@ -385,7 +381,5 @@ exports.updateOrderStatus = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
-    } finally {
-        session.endSession();
-    }
+    } 
 };

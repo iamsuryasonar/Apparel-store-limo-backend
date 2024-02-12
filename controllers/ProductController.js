@@ -614,9 +614,7 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
     console.log(err)
     await session.abortTransaction();
     return res.status(500).json(error("Something went wrong", res.statusCode));
-  } finally {
-    session.endSession();
-  }
+  } 
 };
 
 // @desc   Add size variant of a color variant
