@@ -13,7 +13,6 @@ const queue = async.queue(async (task, callback) => {
 }, 1);
 
 const addToCartQueue = async (req, res) => {
-    console.log('here')
     let session;
     try {
         session = await mongoose.startSession();
@@ -37,8 +36,6 @@ const addToCartQueue = async (req, res) => {
 
         // if item already exists in cart and quantity is provided
         if (item && quantity) {
-            console.log('item already exists', item.quantity, 'qty to add', quantity, 'Could add', QUANTITY_LIMIT - item.quantity)
-
             if (quantity > QUANTITY_LIMIT - item.quantity) {//if quantity to add is greater than quantity could be added, replace quantity with quantity that could be added
                 quantity = QUANTITY_LIMIT - item.quantity;
             }
@@ -159,9 +156,8 @@ exports.getAllItemsInCart = async (req, res) => {
             })
             .exec();
 
-        res.status(200).json(success("OK", {
-            cartItems
-        },
+        res.status(200).json(success("OK",
+            cartItems,
             res.statusCode),
         );
     } catch (err) {

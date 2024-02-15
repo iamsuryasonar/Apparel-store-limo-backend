@@ -89,7 +89,6 @@ exports.getAllPublishedProducts = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
-    console.log(page, limit, skip)
 
     const { from, to, sort_type } = req.query;
     const products = await Product.aggregate([
