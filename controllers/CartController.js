@@ -20,6 +20,7 @@ const addToCartQueue = async (req, res) => {
 
         let { quantity, productId, colorVariantId, sizeVariantId } = req.body;
         const customerId = req.user._id;
+        if (!customerId) return res.status(404).json(error("", res.statusCode));
 
         const product = await Product.findById(productId);
         if (!product) return res.status(404).json(error("Product not found", res.statusCode));
@@ -82,6 +83,7 @@ const updateProductQuantityQueue = async (req, res) => {
         const { id } = req.params;
         let { quantity } = req.body;
         const customerId = req.user._id;
+        if (!customerId) return res.status(404).json(error("", res.statusCode));
 
         if (!quantity) return res.status(400).json(error("Quantity required!", res.statusCode));
         if (quantity > 5) return res.status(400).json(error("Quantity should be less than 6", res.statusCode));
@@ -148,6 +150,8 @@ exports.updateProductQuantity = async (req, res) => {
 exports.getAllItemsInCart = async (req, res) => {
     try {
         const customerId = req.user._id;
+        if (!customerId) return res.status(404).json(error("", res.statusCode));
+
         const cartItems = await Item.find({ customer: customerId, isOrdered: false })
             .populate(['product', 'sizevariant'])
             .populate({
@@ -166,8 +170,6 @@ exports.getAllItemsInCart = async (req, res) => {
     }
 };
 
-
-
 // @desc    Remove item from cart
 // @route   PUT /api/v1/cart/:id
 // @access  Private/Customer
@@ -179,6 +181,7 @@ exports.removeItemFromCart = async (req, res) => {
 
         const { id } = req.params;
         const customerId = req.user._id;
+        if (!customerId) return res.status(404).json(error("", res.statusCode));
 
         const cartItem = await Item.find({ _id: req.params.id, isOrdered: false, customer: customerId });
 

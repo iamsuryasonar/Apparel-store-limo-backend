@@ -1,13 +1,19 @@
 const mongoose = require('mongoose');
 
 const addressSchema = new mongoose.Schema({
-    contactnumber: {
+    name: {
+        type: String,
+        required: true,
+        minlength: 2,
+        maxlength: 255,
+    },
+    contact_number: {
         type: Number,
         minlength: 10,
         maxlength: 10,
         required: true,
     },
-    housenumber: {
+    house_number: {
         type: String,
     },
     town: {
@@ -33,6 +39,12 @@ const addressSchema = new mongoose.Schema({
         required: true,
     },
     state: {
+        type: String,
+        minlength: 2,
+        maxlength: 255,
+        required: true,
+    },
+    country: {
         type: String,
         minlength: 2,
         maxlength: 255,

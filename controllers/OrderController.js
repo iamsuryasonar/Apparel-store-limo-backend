@@ -16,13 +16,15 @@ exports.createOrder = async (req, res) => {
         session.startTransaction();
 
         let {
-            contactNumber,
-            houseNumber,
+            name,
+            contact_number,
+            house_number,
             landmark,
             town,
             city,
             pin,
             state,
+            country
         } = req.body;
 
         const customerId = req.user._id;
@@ -32,13 +34,15 @@ exports.createOrder = async (req, res) => {
 
         // create address
         const address = new Address({
-            contactnumber: contactNumber,
-            housenumber: houseNumber,
+            name,
+            contact_number: contact_number,
+            house_number: house_number,
             landmark,
             town,
             city,
             pin,
             state,
+            country,
             customer: customerId
         });
 
@@ -89,7 +93,7 @@ exports.createOrder = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
-    } 
+    }
 };
 
 // @desc    Cancel order
@@ -124,7 +128,7 @@ exports.cancelOrder = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
-    } 
+    }
 };
 
 // @desc    Get ordered items
@@ -381,5 +385,5 @@ exports.updateOrderStatus = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));
-    } 
+    }
 };

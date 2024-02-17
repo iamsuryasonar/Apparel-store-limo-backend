@@ -3,11 +3,12 @@ const ProductController = require('./ProductController');
 const CartController = require('./CartController');
 const OrderController = require('./OrderController');
 const CategoryController = require('./CategoryController');
-
+const AddressController = require('./AddressController');
 module.exports = {
     AuthController,
     ProductController,
     CartController,
     OrderController,
-    CategoryController
+    CategoryController,
+    AddressController,
 }
