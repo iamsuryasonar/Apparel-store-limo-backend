@@ -57,7 +57,7 @@ exports.getAllAddresses = async (req, res) => {
         const customerId = req?.user._id;
         if (!customerId) return res.status(404).json(error("", res.statusCode));
 
-        const address = await Address.find({ customer: customerId });
+        const address = await Address.find({ customer: customerId }).sort({ createdAt: -1 }).exec();
 
         res.status(200).json(success("OK",
             address,
@@ -68,7 +68,6 @@ exports.getAllAddresses = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
-
 
 // @desc    Delete address
 // @route   PUT /api/v1/address/:id

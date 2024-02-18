@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const { success, error, validation } = require('../common/responseAPI')
 const Item = require('../models/Item')
 const Order = require('../models/Order')
-const Address = require('../models/Address')
 const SizeVariant = require('../models/SizeVariant')
 const { FILTER_ITEMS, ORDER_STATUS } = require('../common/constants')
 
@@ -16,37 +15,13 @@ exports.createOrder = async (req, res) => {
         session.startTransaction();
 
         let {
-            name,
-            contact_number,
-            house_number,
-            landmark,
-            town,
-            city,
-            pin,
-            state,
-            country
+            addressId,
         } = req.body;
 
         const customerId = req.user._id;
 
         const cartItems = await Item.find({ customer: customerId });
         if (!cartItems) return res.status(404).json(error("Cart item not found", res.statusCode));
-
-        // create address
-        const address = new Address({
-            name,
-            contact_number: contact_number,
-            house_number: house_number,
-            landmark,
-            town,
-            city,
-            pin,
-            state,
-            country,
-            customer: customerId
-        });
-
-        await address.save({ session });
 
         cartItems.forEach(async (item) => {
             const sizevariant = await SizeVariant.findById({ _id: item.sizevariant });
@@ -57,7 +32,7 @@ exports.createOrder = async (req, res) => {
                     lockedprice: sizevariant.selling_price,
                     totalamount: total_amount,
                     customer: customerId,
-                    address: address._id,
+                    address: addressId,
                     item: item._id,
                 }
             );
