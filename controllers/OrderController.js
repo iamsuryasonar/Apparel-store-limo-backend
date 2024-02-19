@@ -21,7 +21,7 @@ exports.createOrder = async (req, res) => {
 
         const customerId = req.user._id;
 
-        const cartItems = await Item.find({ customer: customerId });
+        const cartItems = await Item.find({ customer: customerId, isOrdered: false });
         if (!cartItems) return res.status(404).json(error("Cart item not found", res.statusCode));
 
         const payment = new Payment({

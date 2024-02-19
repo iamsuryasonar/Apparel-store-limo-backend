@@ -25,7 +25,7 @@ const addToCartQueue = async (req, res) => {
         const product = await Product.findById(productId);
         if (!product) return res.status(404).json(error("Product not found", res.statusCode));
 
-        let item = await Item.findOne({ sizevariant: sizeVariantId, customer: customerId }).session(session);;
+        let item = await Item.findOne({ sizevariant: sizeVariantId, customer: customerId, isOrdered: false }).session(session);
         let cart = [];
 
         // quantity can't exceed quantity limit 

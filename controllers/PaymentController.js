@@ -23,16 +23,13 @@ exports.createPaymentOrder = async (req, res) => {
         for (const item of cartItems) {
             const sizevariant = await SizeVariant.findById({ _id: item.sizevariant });
             let amount = sizevariant.selling_price * item.quantity;
-            console.log('amount', amount);
             total_amount = total_amount + amount;
-            console.log('calc', total_amount);
         }
-
 
         let options = {
             amount: total_amount * 100, //amount takes in paise
             currency: "INR",
-            receipt: "order_rcptid_111"
+            receipt: "order_rcptid_111"//todo need to be dynamically generated
         };
         const razorpay = new Razorpay({
             key_id: config.razorpay.key,
