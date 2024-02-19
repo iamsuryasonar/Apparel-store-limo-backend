@@ -27,7 +27,7 @@ exports.getAllProducts = async (req, res) => {
       .limit(limit)
       .exec();
 
-    const totalProducts = products.length;
+    const totalProducts = await Product.countDocuments();
 
     const totalPages = Math.ceil(totalProducts / limit);
 
@@ -197,7 +197,6 @@ exports.getAllPublishedProducts = async (req, res) => {
         },
       },
     ])
-    // console.log(products[0].matchedResults)
 
     const totalProducts = products[0]?.count[0]?.count;
     const totalPages = Math.ceil(totalProducts / limit);

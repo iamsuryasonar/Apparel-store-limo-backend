@@ -217,7 +217,7 @@ exports.getAnOrder = async (req, res) => {
 
 // @desc    Get all orders in past
 // @route   GET /api/v1/order/
-// @access  Private/Customer
+// @access  Private/Admin
 
 exports.getAllOrders = async (req, res) => {
     try {
@@ -255,7 +255,7 @@ exports.getAllOrders = async (req, res) => {
             .exec();
 
 
-        const totalOrders = orders.length;
+        const totalOrders = await Order.countDocuments();
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -278,7 +278,7 @@ exports.getAllOrders = async (req, res) => {
 
 // @desc    Get order by status
 // @route   GET /api/v1/order/status/:status
-// @access  Private/Customer
+// @access  Private/Admin
 
 exports.getAllOrdersByStatus = async (req, res) => {
     try {
@@ -317,7 +317,7 @@ exports.getAllOrdersByStatus = async (req, res) => {
             .limit(limit)
             .exec();
 
-        const totalOrders = orders.length;
+        const totalOrders = await Order.countDocuments({ status: status });
 
         const totalPages = Math.ceil(totalOrders / limit);
 
@@ -340,7 +340,7 @@ exports.getAllOrdersByStatus = async (req, res) => {
 
 // @desc    Update order status
 // @route   PUT /api/v1/order/status/:id
-// @access  Private/Customer
+// @access  Private/Admin
 
 
 exports.updateOrderStatus = async (req, res) => {
@@ -349,11 +349,13 @@ exports.updateOrderStatus = async (req, res) => {
         session.startTransaction();
 
         const { id } = req.params;
+
         const {
             status
         } = req.body;
 
-        if (!ORDER_STATUS.includes(status)) return res.status(500).json(error("Status not valid", res.statusCode));
+
+        if (!(ORDER_STATUS.includes(status))) return res.status(500).json(error("Status not valid", res.statusCode));
 
         const order = await Order.findById(id);
         if (!order) return res.status(404).json(error("Order not found", res.statusCode));

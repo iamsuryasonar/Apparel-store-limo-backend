@@ -5,6 +5,7 @@ const order_route = require('./order');
 const category_route = require('./category');
 const address_route = require('./address');
 const payment_route = require('./payment');
+const analytics_route = require('./analytics');
 
 module.exports = {
     auth_route,
@@ -14,4 +15,5 @@ module.exports = {
     category_route,
     address_route,
     payment_route,
+    analytics_route
 };
