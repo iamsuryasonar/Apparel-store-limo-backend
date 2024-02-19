@@ -3,6 +3,7 @@ const { success, error, validation } = require('../common/responseAPI')
 const Item = require('../models/Item')
 const Order = require('../models/Order')
 const SizeVariant = require('../models/SizeVariant')
+const Payment = require('../models/Payment')
 const { FILTER_ITEMS, ORDER_STATUS } = require('../common/constants')
 
 // @desc    Create order
@@ -15,7 +16,7 @@ exports.createOrder = async (req, res) => {
         session.startTransaction();
 
         let {
-            addressId,
+            addressId, razorpay_order_id, razorpay_payment_id, razorpay_signature
         } = req.body;
 
         const customerId = req.user._id;
@@ -23,7 +24,15 @@ exports.createOrder = async (req, res) => {
         const cartItems = await Item.find({ customer: customerId });
         if (!cartItems) return res.status(404).json(error("Cart item not found", res.statusCode));
 
-        cartItems.forEach(async (item) => {
+        const payment = new Payment({
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+        })
+
+        await payment.save({ session })
+
+        for (const item of cartItems) {
             const sizevariant = await SizeVariant.findById({ _id: item.sizevariant });
             const total_amount = sizevariant.selling_price * item.quantity;
 
@@ -34,6 +43,7 @@ exports.createOrder = async (req, res) => {
                     customer: customerId,
                     address: addressId,
                     item: item._id,
+                    payment: payment._id,
                 }
             );
 
@@ -41,7 +51,7 @@ exports.createOrder = async (req, res) => {
 
             item.isOrdered = true;
             await item.save({ session });
-        })
+        }
 
         const allOrders = await Order.find({ customer: customerId })
             .populate({
@@ -58,13 +68,14 @@ exports.createOrder = async (req, res) => {
         await session.commitTransaction();
         session.endSession();
 
-        res.status(201).json(success("OK", {
+        res.status(201).json(success("Order placed", {
             allOrders
         },
             res.statusCode),
         );
     } catch (err) {
         console.log(err)
+        //todo should initiate refund
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));

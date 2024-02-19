@@ -8,7 +8,7 @@ const config = require('./config')
 let app = express();
 app.use(cors())
 
-const { auth_route, product_route, cart_route, order_route, category_route, address_route } = require('./routes');
+const { auth_route, product_route, cart_route, order_route, category_route, address_route, payment_route } = require('./routes');
 
 app.use(express.json());
 
@@ -50,6 +50,8 @@ app.use('/api/v1/order', order_route);
 app.use('/api/v1/product', product_route);
 app.use('/api/v1/category', category_route);
 app.use('/api/v1/address', address_route);
+app.use('/api/v1/payment', payment_route);
+
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })

@@ -21,6 +21,7 @@ const orderSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    payment: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
     // deliveredAt: {type:Date,} this property needs to be added
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
     address: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
