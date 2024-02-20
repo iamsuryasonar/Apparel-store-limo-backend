@@ -448,21 +448,105 @@ exports.getProductsByName = async (req, res) => {
 
     const keywordRegex = new RegExp(name, 'i');
 
-    const products = await Product.find({ name: keywordRegex, isPublished: true })
-      .populate({
-        path: 'colorvariants',
-        populate: ['images', 'sizevariants']
-      })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+    const products = await Product.aggregate([
+      {
+        $match: {
+          name: keywordRegex,
+        }
+      },
+      {
+        $lookup: { // Perform a lookup to fetch category details
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category"
+        }
+      },
+      {// Unwind the category array to obtain individual category details
+        $unwind: "$category"
+      },
+      {// Lookup to fetch color variants related to the product
+        $lookup: {
+          from: "colorvariants",
+          localField: "_id",
+          foreignField: "product",
+          as: "colorVariants"
+        }
+      },
+      {// Unwind the colorVariants array
+        $unwind: "$colorVariants"
+      },
+      {// Lookup to fetch size variants based on color variants
+        $lookup: {
+          from: "sizevariants",
+          localField: "colorVariants._id",
+          foreignField: "colorVariant",
+          as: "sizeVariants"
+        }
+      },
+      {// Unwind the sizeVariants array
+        $unwind: "$sizeVariants"
+      },
+      {// Lookup to fetch images related to color variants
+        $lookup: {
+          from: "images",
+          localField: "colorVariants._id",
+          foreignField: "colorVariant",
+          as: "images"
+        }
+      },
+      {
+        $addFields: {
+          imagesCount: { $size: "$images" }, // Get the size of the images array and gets product information and assigns to keys
+          _id: "$_id",
+          name: "$name",
+          description: "$description",
+          tag: "$tag",
+          keyword: "$keyword",
+        }
+      },
+      {
+        $addFields: {
+          randomIndex: { $floor: { $multiply: ["$imagesCount", { $rand: {} }] } } // Generate a random index
+        }
+      },
+      {
+        $addFields: {
+          randomizedImages: { $arrayElemAt: ["$images", "$randomIndex"] } // Get the image at the random index
+        }
+      },
+      {
+        $project: {
+          category: 1,
+          colorVariants: 1,
+          sizeVariants: 1,
+          image: "$randomizedImages", // Assign the randomized image to the image
+          _id: 1,
+          name: 1,
+          description: 1,
+          tag: 1,
+          keyword: 1,
+        }
+      },
+      {
+        $facet: {// Use $facet to perform multiple aggregations within a single stage
+          count: [// Count the total number of matched documents
+            { $group: { _id: null, count: { $sum: 1 } } },
+          ],
+          // Retrieve matched results based on selling price range
+          matchedResults: [// Filter documents based on selling price range
+            { $skip: skip },// Skip documents for pagination
+            { $limit: 12 },
+          ],
+        },
+      },
+    ]);
 
-    const totalProducts = await Product.countDocuments({ name: keywordRegex, isPublished: true });
-
+    const totalProducts = products[0]?.count[0]?.count;
     const totalPages = Math.ceil(totalProducts / limit);
 
     res.status(200).json(success("OK", {
-      products,
+      products: products[0].matchedResults,
       pagination: {
         page_no: page,
         per_page: limit,
@@ -473,6 +557,7 @@ exports.getProductsByName = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
+    console.log(err)
     return res.status(500).json(error("Something went wrong", res.statusCode));
 
   }
