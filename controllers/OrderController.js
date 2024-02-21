@@ -149,9 +149,8 @@ exports.getOrdereditemsOfUser = async (req, res) => {
             .populate('address')
             .exec();
 
-        res.status(200).json(success("OK", {
-            orderedItems
-        },
+        res.status(200).json(success("OK",
+            orderedItems,
             res.statusCode),
         );
     } catch (err) {
