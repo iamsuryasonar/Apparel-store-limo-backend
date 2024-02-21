@@ -5,6 +5,7 @@ const Order = require('../models/Order')
 const SizeVariant = require('../models/SizeVariant')
 const Payment = require('../models/Payment')
 const { FILTER_ITEMS, ORDER_STATUS } = require('../common/constants')
+const Address = require('../models/Address');
 
 // @desc    Create order
 // @route   POST /api/v1/order/
@@ -24,6 +25,9 @@ exports.createOrder = async (req, res) => {
         const cartItems = await Item.find({ customer: customerId, isOrdered: false });
         if (!cartItems) return res.status(404).json(error("Cart item not found", res.statusCode));
 
+        const address = await Address.findById({ _id: addressId });
+        if (!address) return res.status(404).json(error("Address not found", res.statusCode));
+
         const payment = new Payment({
             razorpay_order_id,
             razorpay_payment_id,
@@ -41,9 +45,18 @@ exports.createOrder = async (req, res) => {
                     lockedprice: sizevariant.selling_price,
                     totalamount: total_amount,
                     customer: customerId,
-                    address: addressId,
                     item: item._id,
                     payment: payment._id,
+                    name: address.name,
+                    contact_number: address.contact_number,
+                    house_number: address.house_number,
+                    town: address.town,
+                    city: address.city,
+                    landmark: address.landmark,
+                    pin: address.pin,
+                    state: address.state,
+                    country: address.country,
+
                 }
             );
 
