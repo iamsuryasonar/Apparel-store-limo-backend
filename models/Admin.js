@@ -34,11 +34,9 @@ const adminSchema = new mongoose.Schema({
   isDeleted: {
     type: Boolean,
     default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  }
+},{
+  timestamps: true, // Automatically add createdAt and updatedAt fields
 });
 
 module.exports = mongoose.model("Admin", adminSchema);

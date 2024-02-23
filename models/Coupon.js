@@ -16,10 +16,9 @@ const couponSchema = new mongoose.Schema({
     codeName: {
         type: String,
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
+    
+}, {
+    timestamps: true, // Automatically add createdAt and updatedAt fields
 });
 
 module.exports = mongoose.model('Coupon', couponSchema);

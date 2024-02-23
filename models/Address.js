@@ -50,11 +50,9 @@ const addressSchema = new mongoose.Schema({
         maxlength: 255,
         required: true,
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+}, {
+    timestamps: true, // Automatically add createdAt and updatedAt fields
 });
 
 module.exports = mongoose.model('Address', addressSchema);

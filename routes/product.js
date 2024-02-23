@@ -9,6 +9,7 @@ router.get('/:id', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN
 router.get('/public/products', ProductController.getAllPublishedProducts); //only published products
 router.get('/public/:id', ProductController.getPublishedProductById); //only published product
 router.get('/keyword/:keyword', ProductController.getProductsByKeyword); //only published products
+router.get('/tag/:tag', ProductController.getProductsByTag); //only published products
 router.get('/category/:id', ProductController.getProductsByCategoryId); //only published products
 router.get('/by_name/:name', ProductController.getProductsByName); //only published products
 

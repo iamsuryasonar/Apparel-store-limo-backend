@@ -4,6 +4,7 @@ const FILTER_ITEMS = {
 }
 
 const ORDER_STATUS = ['ORDERED', 'PROCCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED']
+const PRODUCT_TAG = ['Popular', 'Most purchased', 'New arrival'];
 
 module.exports = {
     FILTER_ITEMS,

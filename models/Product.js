@@ -18,6 +18,8 @@ const productSchema = new mongoose.Schema({
     },
     tag: {
         type: String,
+        enum: ['Popular', 'Most purchased', 'New arrival'],
+        default: 'New arrival',
         minlength: 3,
         maxlength: 255,
     },
@@ -25,13 +27,10 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
 },
     {
+        timestamps: true, // Automatically add createdAt and updatedAt fields
         toJSON: { virtuals: true },
         toObject: { virtuals: true },
     }

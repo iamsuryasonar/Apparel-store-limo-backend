@@ -20,11 +20,9 @@ const categorySchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true,
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
+    }
+}, {
+    timestamps: true, // Automatically add createdAt and updatedAt fields
 });
 
 module.exports = mongoose.model('Category', categorySchema);

@@ -1,12 +1,13 @@
-const Product = require('../models/Product');
-const Category = require('../models/Category');
-const SizeVariant = require('../models/SizeVariant');
-const ColorVariant = require('../models/ColorVariant');
-const Image = require('../models/Image');
+const mongoose = require("mongoose");
 const sharp = require('sharp');
 const { uploadTos3, deleteS3Object } = require('../utils/s3');
 const { success, error, validation } = require('../common/responseAPI')
-const mongoose = require("mongoose");
+const Product = require('../models/Product');
+const Category = require('../models/Category');
+const Image = require('../models/Image');
+const SizeVariant = require('../models/SizeVariant');
+const ColorVariant = require('../models/ColorVariant');
+const PRODUCT_TAG = require("../common/constants");
 
 // @desc   Gets all products
 // @route   GET /api/v1/product/
@@ -289,6 +290,36 @@ exports.getProductsByKeyword = async (req, res) => {
 
   }
 };
+
+
+// @desc   Gets all products by tag
+// @route   GET /api/v1/product/tag/:tag
+// @access  Public
+
+exports.getProductsByTag = async (req, res) => {
+
+  try {
+    const { tag } = req.params;
+    const limit = 4;
+
+    const products = await Product.find({ tag: tag, isPublished: true, updatedAt: -1 })
+      .populate({
+        path: 'colorvariants',
+        populate: ['images', 'sizevariants']
+      })
+      .limit(limit)
+      .exec();
+    console.log(products)
+    res.status(200).json(success("OK",
+      products,
+      res.statusCode),
+    );
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json(error("Something went wrong", res.statusCode));
+  }
+};
+
 
 // @desc   Gets all products by category id
 // @route   GET /api/v1/product/category/:id
@@ -585,7 +616,6 @@ exports.addProduct = async (req, res) => {
     if (!name) return res.status(400).json({ success: false, message: 'Name required' });
     if (!description) return res.status(400).json({ success: false, message: 'Description required' });
     if (!keyword) return res.status(400).json({ success: false, message: 'Keyword required' });
-    if (!tag) return res.status(400).json({ success: false, message: 'Tag required' });
     if (!categoryId) return res.status(400).json({ success: false, message: 'Category id required' });
     if (!colorVariantName) return res.status(400).json({ success: false, message: 'Color variant name required' });
 
@@ -626,7 +656,7 @@ exports.addProduct = async (req, res) => {
       name,
       description,
       keyword,
-      tag,
+      tag: PRODUCT_TAG.contains(tag) ? tag : 'New arrival',
       category: categoryId,
     });
 
