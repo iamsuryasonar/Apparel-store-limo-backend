@@ -3,7 +3,7 @@ const FILTER_ITEMS = {
     OLDEST_FIRST: "OLDEST_FIRST"
 }
 
-const ORDER_STATUS = ['ORDERED', 'PROCCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED']
+const ORDER_STATUS = ['ORDERED', 'PROCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED']
 const PRODUCT_TAG = ['Popular', 'Most purchased', 'New arrival'];
 
 module.exports = {

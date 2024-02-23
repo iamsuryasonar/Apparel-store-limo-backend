@@ -302,14 +302,95 @@ exports.getProductsByTag = async (req, res) => {
     const { tag } = req.params;
     const limit = 4;
 
-    const products = await Product.find({ tag: tag, isPublished: true, updatedAt: -1 })
-      .populate({
-        path: 'colorvariants',
-        populate: ['images', 'sizevariants']
-      })
-      .limit(limit)
-      .exec();
-    console.log(products)
+    const products = await Product.aggregate([
+      {
+        $match: {
+          tag: tag,
+          isPublished: true,// Match all published documents 
+        }
+      },
+      {
+        $lookup: { // Perform a lookup to fetch category details
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category"
+        }
+      },
+      {// Unwind the category array to obtain individual category details
+        $unwind: "$category"
+      },
+      {// Lookup to fetch color variants related to the product
+        $lookup: {
+          from: "colorvariants",
+          localField: "_id",
+          foreignField: "product",
+          as: "colorVariants"
+        }
+      },
+      {// Unwind the colorVariants array
+        $unwind: "$colorVariants"
+      },
+      {// Lookup to fetch size variants based on color variants
+        $lookup: {
+          from: "sizevariants",
+          localField: "colorVariants._id",
+          foreignField: "colorVariant",
+          as: "sizeVariants"
+        }
+      },
+      {// Unwind the sizeVariants array
+        $unwind: "$sizeVariants"
+      },
+      {// Lookup to fetch images related to color variants
+        $lookup: {
+          from: "images",
+          localField: "colorVariants._id",
+          foreignField: "colorVariant",
+          as: "images"
+        }
+      },
+      {
+        $addFields: {
+          imagesCount: { $size: "$images" }, // Get the size of the images array and gets product information and assigns to keys
+          _id: "$_id",
+          name: "$name",
+          description: "$description",
+          tag: "$tag",
+          keyword: "$keyword",
+        }
+      },
+      {
+        $addFields: {
+          randomIndex: { $floor: { $multiply: ["$imagesCount", { $rand: {} }] } } // Generate a random index
+        }
+      },
+      {
+        $addFields: {
+          randomizedImages: { $arrayElemAt: ["$images", "$randomIndex"] } // Get the image at the random index
+        }
+      },
+      {
+        $project: {
+          category: 1,
+          colorVariants: 1,
+          sizeVariants: 1,
+          image: "$randomizedImages", // Assign the randomized image to the image
+          _id: 1,
+          name: 1,
+          description: 1,
+          tag: 1,
+          keyword: 1,
+        }
+      },
+      {
+        $sort: { updatedAt: -1 } // Sort the results by updatedAt in descending order
+      },
+      {
+        $limit: limit // Limit the number of results
+      }
+    ])
+
     res.status(200).json(success("OK",
       products,
       res.statusCode),

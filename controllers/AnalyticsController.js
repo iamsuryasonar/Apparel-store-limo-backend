@@ -9,7 +9,7 @@ exports.getAnalytics = async (req, res) => {
     try {
         const totalOrders = await Order.countDocuments();
         const totalOrderedOrders = await Order.countDocuments({ status: 'ORDERED' });
-        const totalProcessedOrders = await Order.countDocuments({ status: 'PROCCESSED' });
+        const totalProcessedOrders = await Order.countDocuments({ status: 'PROCESSED' });
         const totalInTransitOrders = await Order.countDocuments({ status: 'TRANSIT' });
         const totalDeliveredOrders = await Order.countDocuments({ status: 'DELIVERED' });
         const totalCancelledOrders = await Order.countDocuments({ status: 'CANCELLED' });
