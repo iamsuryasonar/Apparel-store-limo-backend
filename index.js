@@ -61,9 +61,5 @@ app.get('/', (req, res) => {
 
 app.listen(config.port, function () {
     console.log("Started application on port %d", config.port);
-    setInterval(() => {
-        https.get('https://limo-backend-e2jw.onrender.com/', (res) => {
-            console.log(res.statusCode)
-        })
-    }, 14 * 60 * 1000)
+    
 });
