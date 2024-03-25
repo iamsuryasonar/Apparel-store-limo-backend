@@ -48,6 +48,55 @@ exports.addAddress = async (req, res) => {
     }
 };
 
+// @desc    Update address
+// @route   PUT /api/v1/address/
+// @access  Private/Customer
+
+exports.updateAddress = async (req, res) => {
+    try {
+        const {
+            id,
+            name,
+            contact_number,
+            house_number,
+            landmark,
+            town,
+            city,
+            pin,
+            state,
+            country,
+        } = req.body;
+
+        const customerId = req?.user._id;
+        if (!customerId) return res.status(400).json(error("Can't update address", res.statusCode));
+
+        const address = await Address.find({ _id: req.params.id, customer: customerId });
+
+        if (!address) return res.status(404).json(error("Address not found", res.statusCode));
+
+        const updatedAddress = await Address.findByIdAndUpdate(
+            { _id: req.params.id, customer: customerId },
+            {
+                name,
+                contact_number,
+                house_number,
+                landmark,
+                town,
+                city,
+                pin,
+                state,
+                country,
+            },
+        );
+
+        res.status(200).json(success("Address updated successfully", updatedAddress, res.statusCode));
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};
+
+
 // @desc   Get all addresses
 // @route   GET /api/v1/address/
 // @access  Private/Customer

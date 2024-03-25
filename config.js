@@ -19,5 +19,8 @@ module.exports = {
     razorpay: {
         key: process.env.RZR_KEY,
         secret: process.env.RZR_SECRET,
+    },
+    resend: {
+        key: process.env.RESEND_KEY,
     }
 };
