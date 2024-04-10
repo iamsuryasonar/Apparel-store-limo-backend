@@ -61,4 +61,11 @@ app.get('/', (req, res) => {
 
 app.listen(config.port, function () {
     console.log("Started application on port %d", config.port);
+    // this setInterval makes sure that the server don't spin down on idle.
+    // reference - https://docs.render.com/free#spinning-down-on-idle
+    // setInterval(() => {
+    //     https.get('https://urlshare-backend.onrender.com/', (res) => {
+    //         console.log(res.statusCode)
+    //     })
+    // }, 14 * 60 * 1000)
 });
