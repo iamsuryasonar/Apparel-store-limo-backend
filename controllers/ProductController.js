@@ -114,26 +114,26 @@ exports.getAllPublishedProducts = async (req, res) => {
           from: "colorvariants",
           localField: "_id",
           foreignField: "product",
-          as: "colorVariants"
+          as: "colorvariants"
         }
       },
       {// Unwind the colorVariants array
-        $unwind: "$colorVariants"
+        $unwind: "$colorvariants"
       },
       {// Lookup to fetch size variants based on color variants
         $lookup: {
           from: "sizevariants",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
-          as: "sizeVariants"
+          as: "sizevariants"
         }
       },
       {// Unwind the sizeVariants array
-        $unwind: "$sizeVariants"
+        $unwind: "$sizevariants"
       },
       {// Filter documents based on selling price within the specified range
         $match: {
-          'sizeVariants.selling_price': {
+          'sizevariants.selling_price': {
             $gt: Number(from),
             $lt: Number(to)
           }
@@ -142,7 +142,7 @@ exports.getAllPublishedProducts = async (req, res) => {
       {// Lookup to fetch images related to color variants
         $lookup: {
           from: "images",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
           as: "images"
         }
@@ -170,8 +170,8 @@ exports.getAllPublishedProducts = async (req, res) => {
       {
         $project: {
           category: 1,
-          colorVariants: 1,
-          sizeVariants: 1,
+          colorvariants: 1,
+          sizevariants: 1,
           image: "$randomizedImages", // Assign the randomized image to the image
           _id: 1,
           name: 1,
@@ -187,11 +187,11 @@ exports.getAllPublishedProducts = async (req, res) => {
           ],
           // Retrieve matched results based on selling price range
           matchedResults: [// Filter documents based on selling price range
-            { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
+            { $match: { 'sizevariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
             { $sample: { size: 99999 } },// Randomly select documents up to the specified limit
             // Sort the results based on sort_type
-            ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizeVariants.selling_price': 1 } }] : []),
-            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizeVariants.selling_price': -1 } }] : []),
+            ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizevariants.selling_price': 1 } }] : []),
+            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizevariants.selling_price': -1 } }] : []),
             { $skip: skip },// Skip documents for pagination
             { $limit: 12 },
           ],
@@ -243,6 +243,7 @@ exports.getPublishedProductById = async (req, res) => {
       res.statusCode),
     );
   } catch (err) {
+    console.log(err);
     return res.status(500).json(error("Something went wrong", res.statusCode));
   }
 };
@@ -325,27 +326,27 @@ exports.getProductsByTag = async (req, res) => {
           from: "colorvariants",
           localField: "_id",
           foreignField: "product",
-          as: "colorVariants"
+          as: "colorvariants"
         }
       },
       {// Unwind the colorVariants array
-        $unwind: "$colorVariants"
+        $unwind: "$colorvariants"
       },
       {// Lookup to fetch size variants based on color variants
         $lookup: {
           from: "sizevariants",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
-          as: "sizeVariants"
+          as: "sizevariants"
         }
       },
       {// Unwind the sizeVariants array
-        $unwind: "$sizeVariants"
+        $unwind: "$sizevariants"
       },
       {// Lookup to fetch images related to color variants
         $lookup: {
           from: "images",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
           as: "images"
         }
@@ -373,8 +374,8 @@ exports.getProductsByTag = async (req, res) => {
       {
         $project: {
           category: 1,
-          colorVariants: 1,
-          sizeVariants: 1,
+          colorvariants: 1,
+          sizevariants: 1,
           image: "$randomizedImages", // Assign the randomized image to the image
           _id: 1,
           name: 1,
@@ -441,26 +442,26 @@ exports.getProductsByCategoryId = async (req, res) => {
           from: "colorvariants",
           localField: "_id",
           foreignField: "product",
-          as: "colorVariants"
+          as: "colorvariants"
         }
       },
       {// Unwind the colorVariants array
-        $unwind: "$colorVariants"
+        $unwind: "$colorvariants"
       },
       {// Lookup to fetch size variants based on color variants
         $lookup: {
           from: "sizevariants",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
-          as: "sizeVariants"
+          as: "sizevariants"
         }
       },
       {// Unwind the sizeVariants array
-        $unwind: "$sizeVariants"
+        $unwind: "$sizevariants"
       },
       {// Filter documents based on selling price within the specified range
         $match: {
-          'sizeVariants.selling_price': {
+          'sizevariants.selling_price': {
             $gt: Number(from),
             $lt: Number(to)
           }
@@ -469,7 +470,7 @@ exports.getProductsByCategoryId = async (req, res) => {
       {// Lookup to fetch images related to color variants
         $lookup: {
           from: "images",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
           as: "images"
         }
@@ -497,8 +498,8 @@ exports.getProductsByCategoryId = async (req, res) => {
       {
         $project: {
           category: 1,
-          colorVariants: 1,
-          sizeVariants: 1,
+          colorvariants: 1,
+          sizevariants: 1,
           image: "$randomizedImages", // Assign the randomized image to the image
           _id: 1,
           name: 1,
@@ -514,11 +515,11 @@ exports.getProductsByCategoryId = async (req, res) => {
           ],
           // Retrieve matched results based on selling price range
           matchedResults: [// Filter documents based on selling price range
-            { $match: { 'sizeVariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
+            { $match: { 'sizevariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
             { $sample: { size: 99999 } },// Randomly select documents up to the specified limit
             // Sort the results based on sort_type
-            ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizeVariants.selling_price': 1 } }] : []),
-            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizeVariants.selling_price': -1 } }] : []),
+            ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizevariants.selling_price': 1 } }] : []),
+            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizevariants.selling_price': -1 } }] : []),
             { $skip: skip },// Skip documents for pagination
             { $limit: 12 },
           ],
@@ -540,6 +541,7 @@ exports.getProductsByCategoryId = async (req, res) => {
     },
       res.statusCode),
     );
+
   } catch (err) {
     console.log(err)
     return res.status(500).json(error("Something went wrong", res.statusCode));
@@ -582,27 +584,27 @@ exports.getProductsByName = async (req, res) => {
           from: "colorvariants",
           localField: "_id",
           foreignField: "product",
-          as: "colorVariants"
+          as: "colorvariants"
         }
       },
       {// Unwind the colorVariants array
-        $unwind: "$colorVariants"
+        $unwind: "$colorvariants"
       },
       {// Lookup to fetch size variants based on color variants
         $lookup: {
           from: "sizevariants",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
-          as: "sizeVariants"
+          as: "sizevariants"
         }
       },
       {// Unwind the sizeVariants array
-        $unwind: "$sizeVariants"
+        $unwind: "$sizevariants"
       },
       {// Lookup to fetch images related to color variants
         $lookup: {
           from: "images",
-          localField: "colorVariants._id",
+          localField: "colorvariants._id",
           foreignField: "colorVariant",
           as: "images"
         }
@@ -630,8 +632,8 @@ exports.getProductsByName = async (req, res) => {
       {
         $project: {
           category: 1,
-          colorVariants: 1,
-          sizeVariants: 1,
+          colorvariants: 1,
+          sizevariants: 1,
           image: "$randomizedImages", // Assign the randomized image to the image
           _id: 1,
           name: 1,
