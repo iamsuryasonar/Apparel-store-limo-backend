@@ -301,7 +301,19 @@ exports.getProductsByTag = async (req, res) => {
 
   try {
     const { tag } = req.params;
-    const limit = 4;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+    if (!tag) return res.status(400).json({ success: false, message: 'Tag is required' });
+    let { from, to, sort_type } = req.query;
+
+    if (from === undefined) {
+      from = 0;
+    }
+
+    if (to === undefined) {
+      to = 99999;
+    }
 
     const products = await Product.aggregate([
       {
@@ -388,12 +400,36 @@ exports.getProductsByTag = async (req, res) => {
         $sort: { updatedAt: -1 } // Sort the results by updatedAt in descending order
       },
       {
-        $limit: limit // Limit the number of results
-      }
+        $facet: {// Use $facet to perform multiple aggregations within a single stage
+          count: [// Count the total number of matched documents
+            { $group: { _id: null, count: { $sum: 1 } } },
+          ],
+          // Retrieve matched results based on selling price range
+          matchedResults: [// Filter documents based on selling price range
+            { $match: { 'sizevariants.selling_price': { $gt: Number(from), $lt: Number(to) } } },
+            { $sample: { size: 99999 } },// Randomly select documents up to the specified limit
+            // Sort the results based on sort_type
+            ...(sort_type === 'ASCENDING' ? [{ $sort: { 'sizevariants.selling_price': 1 } }] : []),
+            ...(sort_type === 'DECENDING' ? [{ $sort: { 'sizevariants.selling_price': -1 } }] : []),
+            { $skip: skip },// Skip documents for pagination
+            { $limit: 12 },
+          ],
+        },
+      },
     ])
 
-    res.status(200).json(success("OK",
-      products,
+    const totalProducts = products[0]?.count[0]?.count;
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    res.status(200).json(success("OK", {
+      products: products[0].matchedResults,
+      pagination: {
+        page_no: page,
+        per_page: limit,
+        total_products: totalProducts,
+        total_pages: totalPages,
+      },
+    },
       res.statusCode),
     );
   } catch (err) {
@@ -419,7 +455,8 @@ exports.getProductsByCategoryId = async (req, res) => {
     const category = await Category.findById(id);
     if (!category) return res.status(422).json(validation({ categoryId: "Invalid category id" }));
 
-    const { from, to, sort_type } = req.query;
+    let { from, to, sort_type } = req.query;
+
     const products = await Product.aggregate([
       {
         $match: {
