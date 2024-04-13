@@ -304,16 +304,10 @@ exports.getProductsByTag = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
+
     if (!tag) return res.status(400).json({ success: false, message: 'Tag is required' });
+
     let { from, to, sort_type } = req.query;
-
-    if (from === undefined) {
-      from = 0;
-    }
-
-    if (to === undefined) {
-      to = 99999;
-    }
 
     const products = await Product.aggregate([
       {
@@ -355,6 +349,14 @@ exports.getProductsByTag = async (req, res) => {
       {// Unwind the sizeVariants array
         $unwind: "$sizevariants"
       },
+      {// Filter documents based on selling price within the specified range
+        $match: {
+          'sizevariants.selling_price': {
+            $gt: Number(from),
+            $lt: Number(to)
+          }
+        }
+      },
       {// Lookup to fetch images related to color variants
         $lookup: {
           from: "images",
@@ -395,9 +397,6 @@ exports.getProductsByTag = async (req, res) => {
           tag: 1,
           keyword: 1,
         }
-      },
-      {
-        $sort: { updatedAt: -1 } // Sort the results by updatedAt in descending order
       },
       {
         $facet: {// Use $facet to perform multiple aggregations within a single stage
@@ -461,6 +460,7 @@ exports.getProductsByCategoryId = async (req, res) => {
       {
         $match: {
           category: mongoose.Types.ObjectId(id),// Match documents based on the provided category ID
+          isPublished: true,// Match all published documents 
         }
       },
       {
