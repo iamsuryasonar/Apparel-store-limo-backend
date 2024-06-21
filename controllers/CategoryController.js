@@ -116,12 +116,13 @@ exports.updateCategory = async (req, res) => {
         }
         
         const updatedCategory = await category.save({ session });
-        await session.commitTransaction();
-        session.endSession();
-
+        
         if (path && updatedCategory) { 
             await deleteS3Object(path)
         }
+
+        await session.commitTransaction();
+        session.endSession();
         
         res.status(200).json(success("OK", {
             updatedCategory

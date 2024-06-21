@@ -18,6 +18,11 @@ app.use(cors(corsOptions));
 
 app.options('*', cors(corsOptions));
 
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'https://admin-limo.netlify.app');
+    next();
+});
+
 const { auth_route, product_route, cart_route, order_route, category_route, address_route, payment_route, analytics_route, contact_us_route } = require('./routes');
 
 app.use(express.json());
