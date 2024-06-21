@@ -8,7 +8,7 @@ const config = require('./config')
 let app = express();
 
 const corsOptions = {
-    origin: 'https://admin-limo.netlify.app',
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204
@@ -18,10 +18,10 @@ app.use(cors(corsOptions));
 
 app.options('*', cors(corsOptions));
 
-app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://admin-limo.netlify.app');
-    next();
-});
+// app.use((req, res, next) => {
+//     res.setHeader('Access-Control-Allow-Origin', 'https://admin-limo.netlify.app');
+//     next();
+// });
 
 const { auth_route, product_route, cart_route, order_route, category_route, address_route, payment_route, analytics_route, contact_us_route } = require('./routes');
 

@@ -1,6 +1,8 @@
+const mongoose = require('mongoose')
 const Category = require('../models/Category');
 const { success, error } = require('../common/responseAPI')
-const { uploadTos3 } = require('../utils/s3')
+const { uploadTos3, deleteS3Object } = require('../utils/s3');
+const sharp = require('sharp');
 
 // @desc   Get all categories
 // @route   GET /api/v1/category/
@@ -84,7 +86,7 @@ exports.updateCategory = async (req, res) => {
             isActive
         } = req.body;
 
-        const category = await Category.findById(req.params.id);
+        const category = await Category.findById(id);
         if (!category) return res.status(404).json(error("Category not found", res.statusCode));
         
         if (req?.files && req?.files['image'] && req?.files['image'][0] !== null && path) {
@@ -98,6 +100,7 @@ exports.updateCategory = async (req, res) => {
             let bannerImageInfo;
 
             await uploadTos3(bannerImageWebp).then((result) => {
+                console.log(result)
                 bannerImageInfo = result;
             })
 
@@ -130,6 +133,7 @@ exports.updateCategory = async (req, res) => {
             res.statusCode),
         );
     } catch (err) {
+        console.log(err)
         await session.abortTransaction();
         session.endSession();
         return res.status(500).json(error("Something went wrong", res.statusCode));

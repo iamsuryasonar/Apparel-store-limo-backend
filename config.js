@@ -11,8 +11,8 @@ module.exports = {
     aws: {
         endpoint: process.env.ENDPOINT,
         signatureVersion: process.env.SIGNATUREVERSION,
-        accessKeyId: process.env.AWS_ACCESS_ID,
-        secretAccessKey: process.env.AWS_ACCESS_SECRET,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_ACCESS_KEY_SECRET,
         bucketName: process.env.AWS_BUCKET_NAME,
         regionName: process.env.AWS_REGION_NAME,
     },
