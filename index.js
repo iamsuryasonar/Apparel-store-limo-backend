@@ -6,7 +6,17 @@ require('dotenv').config();
 const https = require('https');
 const config = require('./config')
 let app = express();
-app.use(cors())
+
+const corsOptions = {
+    origin: 'https://admin-limo.netlify.app',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
+app.options('*', cors(corsOptions));
 
 const { auth_route, product_route, cart_route, order_route, category_route, address_route, payment_route, analytics_route, contact_us_route } = require('./routes');
 
