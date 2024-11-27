@@ -1,9 +1,7 @@
-const { success, error } = require('../common/responseAPI')
-const razorpay = require('../common/razorpayConfig');
-const Payment = require('../models/Payment')
-const Item = require('../models/Item')
-const Order = require('../models/Order')
-const SizeVariant = require('../models/SizeVariant')
+const { success, error } = require('../common/responseAPI');
+const { razorpay } = require('../common/razorpayConfig');
+const Item = require('../models/Item');
+const SizeVariant = require('../models/SizeVariant');
 const Razorpay = require('razorpay');
 const config = require('../config');
 const crypto = require('crypto');
@@ -31,10 +29,6 @@ exports.createPaymentOrder = async (req, res) => {
             currency: "INR",
             receipt: "order_rcptid_111"//todo need to be dynamically generated
         };
-        const razorpay = new Razorpay({
-            key_id: config.razorpay.key,
-            key_secret: config.razorpay.secret,
-        });
 
         razorpay.orders.create(options, function (err, order) {
             if (order) return res.status(201).json(success("OK", order, res.statusCode));

@@ -16,7 +16,7 @@ exports.adminRegistration = async (req, res) => {
   try {
     if (!req.body.name) return res.status(422).json(validation({ name: "Name is required" }));
     if (!req.body.email) return res.status(422).json(validation({ email: "Email is required" }));
-    if (!req.body.password) return res.status(42).json(validation({ password: "Password is required" }));
+    if (!req.body.password) return res.status(422).json(validation({ password: "Password is required" }));
 
     const emailExist = await Admin.findOne({ email: req.body.email })
 

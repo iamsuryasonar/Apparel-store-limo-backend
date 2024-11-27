@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const { success, error, validation } = require('../common/responseAPI')
+const { razorpay } = require('../common/razorpayConfig');
 const Item = require('../models/Item')
 const Order = require('../models/Order')
 const SizeVariant = require('../models/SizeVariant')
@@ -7,91 +8,134 @@ const Payment = require('../models/Payment')
 const { FILTER_ITEMS, ORDER_STATUS } = require('../common/constants')
 const Address = require('../models/Address');
 
+const initiateRefund = async (paymentId) => {
+    try {
+        const paymentDetails = await razorpay.payments.fetch(paymentId);
+
+        const refund = await razorpay.payments.refund(paymentId, {
+            amount: paymentDetails.amount / 100, // Convert from paise to currency
+        });
+
+        return {
+            refundId: refund.id,
+            status: refund.status,
+        };
+    } catch (error) {
+        console.error("Error initiating refund:", error);
+        throw new Error("Refund initiation failed.");
+    }
+};
+
+const validateAddress = async (addressId) => {
+    const address = await Address.findById({ _id: addressId });
+    if (!address) {
+        throw new Error("Address not found.");
+    }
+    return address;
+};
+
+const validateCartItems = async (customerId) => {
+    const cartItems = await Item.find({ customer: customerId, isOrdered: false });
+    if (!cartItems || cartItems.length === 0) {
+        throw new Error("Cart items not found.");
+    }
+    return cartItems;
+};
+
+const createPaymentRecord = async (paymentDetails) => {
+    const payment = new Payment(paymentDetails);
+    await payment.save();
+    return payment;
+};
+
+
 // @desc    Create order
 // @route   POST /api/v1/order/
 // @access  Private/Customer
 
 exports.createOrder = async (req, res) => {
+
+    if (!req.body.addressId) {
+        return res.status(422).json(validation({ addressId: "Address is required." }));
+    }
+
+    let session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-        let session = await mongoose.startSession();
-        session.startTransaction();
 
         let {
             addressId, razorpay_order_id, razorpay_payment_id, razorpay_signature
         } = req.body;
-
         const customerId = req.user._id;
 
-        const cartItems = await Item.find({ customer: customerId, isOrdered: false });
-        if (!cartItems) return res.status(404).json(error("Cart item not found", res.statusCode));
+        const cartItems = await validateCartItems(customerId);
+        const address = await validateAddress(addressId);
 
-        const address = await Address.findById({ _id: addressId });
-        if (!address) return res.status(404).json(error("Address not found", res.statusCode));
-
-        const payment = new Payment({
+        const payment = await createPaymentRecord({
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature,
-        })
+        });
 
-        await payment.save({ session })
 
         for (const item of cartItems) {
-            const sizevariant = await SizeVariant.findById({ _id: item.sizevariant });
-            const total_amount = sizevariant.selling_price * item.quantity;
+            const product_variant = await SizeVariant.findById({ _id: item.sizevariant });
 
-            const order = new Order(
-                {
-                    lockedprice: sizevariant.selling_price,
-                    totalamount: total_amount,
-                    customer: customerId,
-                    item: item._id,
-                    payment: payment._id,
-                    name: address.name,
-                    contact_number: address.contact_number,
-                    house_number: address.house_number,
-                    town: address.town,
-                    city: address.city,
-                    landmark: address.landmark,
-                    pin: address.pin,
-                    state: address.state,
-                    country: address.country,
+            if (product_variant.stock < item.quantity) {
+                await initiateRefund(razorpay_payment_id);
+                return res.status(409).json(error("Insufficient stock. Refund initiated!", res.statusCode));
+            };
 
-                }
+            const updatedVariant = await SizeVariant.findByIdAndUpdate(
+                item.sizevariant,
+                { $inc: { stock: -item.quantity } },
+                { new: true, session }
             );
 
-            await order.save({ session })
+            const totalAmount = updatedVariant.selling_price * item.quantity;
+
+            const order = new Order({
+                lockedprice: updatedVariant.selling_price,
+                totalamount: totalAmount,
+                customer: customerId,
+                item: item._id,
+                payment: payment._id,
+                name: address.name,
+                contact_number: address.contact_number,
+                house_number: address.house_number,
+                town: address.town,
+                city: address.city,
+                landmark: address.landmark,
+                pin: address.pin,
+                state: address.state,
+                country: address.country,
+            });
+
+            await order.save({ session });
 
             item.isOrdered = true;
             await item.save({ session });
         }
 
-        const allOrders = await Order.find({ customer: customerId })
-            .populate({
-                path: 'item',
-                populate: [
-                    { path: 'product' },
-                    { path: 'sizevariant' },
-                    { path: 'colorvariant', populate: { path: 'images' } },
-                ],
-            })
-            .populate('address')
-            .exec();
-
         await session.commitTransaction();
         session.endSession();
 
-        res.status(201).json(success("Order placed", {
-            allOrders
-        },
+        res.status(201).json(success("Order placed successfully.", {},
             res.statusCode),
         );
     } catch (err) {
-        console.log(err)
-        //todo should initiate refund
+        console.error("Error creating order:", err);
         await session.abortTransaction();
         session.endSession();
-        return res.status(500).json(error("Something went wrong", res.statusCode));
+
+        try {
+            await initiateRefund(req.body.razorpay_payment_id);
+        } catch (refundError) {
+            console.error("Error during refund:", refundError);
+        }
+
+        return res.status(500).json(error("Something went wrong. Refund initiated!", res.statusCode));
     }
 };
 

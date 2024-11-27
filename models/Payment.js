@@ -12,7 +12,7 @@ const paymentSchema = new mongoose.Schema({
     razorpay_signature: {
         type: String,
         required: true,
-    },
+    }
 }, {
     timestamps: true, // Automatically add createdAt and updatedAt fields
 });

@@ -9,7 +9,7 @@ const awsConfig = {
     signatureVersion: config.aws.signatureVersion,
 }
 
-console.log(awsConfig)
+// console.log(awsConfig)
 
 const s3 = new AWS.S3(awsConfig);
 
