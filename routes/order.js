@@ -8,6 +8,7 @@ router.get('/:id', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN
 router.get('/status/:status', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), OrderController.getAllOrdersByStatus);
 router.get('/orders/ordered', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), OrderController.getOrdereditemsOfUser);
 router.get('/orders/cancelled', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), OrderController.getCancelledOrdersOfUser);
+router.get('/orders/most_ordered_products', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), OrderController.getMostOrderedProducts);
 router.post('/', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), OrderController.createOrder);
 router.put('/status/:id', authMiddleware.authenticate, authMiddleware.restrictTo('ADMIN'), OrderController.updateOrderStatus);
 router.put('/:id', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), OrderController.cancelOrder);

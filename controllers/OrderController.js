@@ -431,3 +431,73 @@ exports.updateOrderStatus = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
+
+// @desc    Get most purchased products
+// @route   GET /api/v1/order/most_purchased_products
+// @access  Private/Admin
+
+exports.getMostOrderedProducts = async (req, res) => {
+    try {
+        const limit = 10;
+
+        const mostOrderedProducts = await Order.aggregate([
+            {
+                $lookup: {
+                    from: "items",
+                    localField: "item",
+                    foreignField: "_id",
+                    as: "item"
+                }
+            },
+            {
+                $unwind: "$item"
+            },
+            {
+                $group: {
+                    _id: '$item.product',
+                    totalQuantity: { $sum: '$item.quantity' },
+                },
+            },
+            { $sort: { totalQuantity: -1 } },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'products',
+                },
+            },
+            { $unwind: '$products' },
+            {
+                $lookup: {
+                    from: "categories",
+                    localField: "products.category",
+                    foreignField: "_id",
+                    as: "category"
+                }
+            },
+            { $unwind: '$category' },
+            {
+                $project: {
+                    _id: 1,
+                    totalQuantity: 1,
+                    name: '$products.name',
+                    description: '$products.description',
+                    tag: '$products.tag',
+                    gender: '$products.gender',
+                    category: '$category',
+                },
+            }
+        ]);
+
+        res.status(200).json(success("OK", {
+            mostOrderedProducts
+        },
+            res.statusCode),
+        );
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(error("Something went wrong", res.statusCode));
+    }
+};

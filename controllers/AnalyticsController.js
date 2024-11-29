@@ -14,6 +14,39 @@ exports.getAnalytics = async (req, res) => {
         const totalDeliveredOrders = await Order.countDocuments({ status: 'DELIVERED' });
         const totalCancelledOrders = await Order.countDocuments({ status: 'CANCELLED' });
 
+        const latestOrders = await Order.find()
+            .populate({
+                path: 'item',
+                populate: [
+                    { path: 'product' },
+                    { path: 'sizevariant' },
+                    { path: 'colorvariant', populate: { path: 'images' } },
+                ],
+            })
+            .populate('address')
+            .populate([
+                { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
+            ])
+            .sort({
+                createdAt: -1,
+            })
+            .limit(8)
+            .exec();
+
+        const totalRevenue = await Order.aggregate([
+            {
+                $match: {
+                    status: { $ne: 'CANCELLED' },
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: '$totalamount' },
+                },
+            },
+        ]);
+
         const result = {
             totalOrders,
             totalOrderedOrders,
@@ -21,6 +54,8 @@ exports.getAnalytics = async (req, res) => {
             totalInTransitOrders,
             totalDeliveredOrders,
             totalCancelledOrders,
+            totalRevenue: totalRevenue[0].totalRevenue,
+            latestOrders,
         }
         res.status(200).json(success("OK", result, res.statusCode));
     } catch (err) {
@@ -28,3 +63,5 @@ exports.getAnalytics = async (req, res) => {
         return res.status(500).json(error("Something went wrong", res.statusCode));
     }
 };
+
+
