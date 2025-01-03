@@ -27,7 +27,7 @@ const initiateRefund = async (paymentId) => {
 };
 
 const validateAddress = async (addressId) => {
-    const address = await Address.findById({ _id: addressId });
+    const address = await Address.findById(addressId);
     if (!address) {
         throw new Error("Address not found.");
     }
@@ -78,9 +78,8 @@ exports.createOrder = async (req, res) => {
             razorpay_signature,
         });
 
-
         for (const item of cartItems) {
-            const product_variant = await SizeVariant.findById({ _id: item.sizevariant });
+            const product_variant = await SizeVariant.findById(item.sizevariant);
 
             if (product_variant.stock < item.quantity) {
                 await initiateRefund(razorpay_payment_id);
@@ -258,8 +257,7 @@ exports.getAnOrder = async (req, res) => {
             .populate('address')
             .populate([
                 { path: 'customer', select: ['-password', '-isDeleted', '-isBlocked', '-__v', '-role'] },
-            ])
-            .exec();
+            ]);
 
         res.status(200).json(success("OK",
             order,

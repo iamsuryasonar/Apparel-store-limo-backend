@@ -4,7 +4,10 @@ const bodyParser = require('body-parser');
 let cors = require('cors')
 require('dotenv').config();
 const https = require('https');
-const config = require('./config')
+const config = require('./config');
+const cluster = require('node:cluster');
+const numOfCPU = require('node:os').availableParallelism();
+
 let app = express();
 
 const corsOptions = {
@@ -69,18 +72,24 @@ app.use('/api/v1/payment', payment_route);
 app.use('/api/v1/analytics', analytics_route);
 app.use('/api/v1/contact-us', contact_us_route);
 
-
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
-app.listen(config.port, function () {
-    console.log("Started application on port %d", config.port);
-    // this setInterval makes sure that the server don't spin down on idle.
-    // reference - https://docs.render.com/free#spinning-down-on-idle
-    setInterval(() => {
-        https.get('https://apparel-store-limo-backend.onrender.com/', (res) => {
-            console.log(res.statusCode)
-        })
-    }, 14 * 60 * 1000)
-});
+if (cluster.isPrimary && process.env.NODE_ENV === 'production') {
+    console.log(`Primary ${process.pid} is running`)
+
+    for (let i = 0; i < numOfCPU; i++) {
+        cluster.fork();
+    }
+
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`worker ${worker.process.pid} died`);
+    });
+} else {
+    app.listen(config.port, function () {
+        console.log("Started application on port %d", config.port);
+    });
+}
+
+module.exports = app;

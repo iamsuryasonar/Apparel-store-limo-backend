@@ -9,7 +9,7 @@ const imageSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    colorVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'ColorVariant' }
+    colorVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'ColorVariant', index: true }
 }, {
     timestamps: true, // Automatically add createdAt and updatedAt fields
 });

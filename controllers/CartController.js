@@ -73,7 +73,6 @@ const addToCartQueue = async (req, res) => {
     }
 };
 
-
 const updateProductQuantityQueue = async (req, res) => {
     let session;
     try {
@@ -156,9 +155,8 @@ exports.getAllItemsInCart = async (req, res) => {
             .populate(['product', 'sizevariant'])
             .populate({
                 path: 'colorvariant',
-                populate: ['images']
-            })
-            .exec();
+                populate: ['images'],
+            });
 
         res.status(200).json(success("OK",
             cartItems,
@@ -183,11 +181,7 @@ exports.removeItemFromCart = async (req, res) => {
         const customerId = req.user._id;
         if (!customerId) return res.status(404).json(error("", res.statusCode));
 
-        const cartItem = await Item.find({ _id: req.params.id, isOrdered: false, customer: customerId });
-
-        if (!cartItem) return res.status(404).json(error("Cart item not found", res.statusCode));
-
-        let deletedItem = await Item.deleteOne({ _id: req.params.id, isOrdered: false }, { session });
+        let deletedItem = await Item.deleteOne({ _id: req.params.id, isOrdered: false, customer: customerId }, { session });
 
         await session.commitTransaction();
         session.endSession();

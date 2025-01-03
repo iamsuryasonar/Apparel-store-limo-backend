@@ -50,7 +50,7 @@ const addressSchema = new mongoose.Schema({
         maxlength: 255,
         required: true,
     },
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', index: true },
 }, {
     timestamps: true, // Automatically add createdAt and updatedAt fields
 });

@@ -92,6 +92,7 @@ exports.getAllPublishedProducts = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const { from, to, sort_type } = req.query;
+
     const products = await Product.aggregate([
       {
         $match: {
@@ -232,8 +233,7 @@ exports.getPublishedProductById = async (req, res) => {
       .populate({
         path: 'colorvariants',
         populate: ['images', 'sizevariants']
-      })
-      .exec();
+      });
 
     if (!product) return res.status(404).json(error("Product not found!", res.statusCode));
 
@@ -759,17 +759,16 @@ exports.addProduct = async (req, res) => {
     })
 
     let imageUrlArr = [];
-    if (images?.length >= 1) {
-      for (var i = 0; i < images?.length; i++) {
-        //convert each image to webp with quality 40%
-        const webpImageBuffer = await sharp(images[i].buffer)
-          .webp([{ near_lossless: true }, { quality: 40 }])
-          .toBuffer();
+    if (images?.length > 0) {
+      imageUrlArr = await Promise.all(
+        images.map(async (image) => {
+          const webpImageBuffer = await sharp(image.buffer)
+            .webp([{ near_lossless: true }, { quality: 40 }])
+            .toBuffer();
 
-        await uploadTos3(webpImageBuffer).then((result) => {
-          imageUrlArr.push(result);
+          return await uploadTos3(webpImageBuffer);
         })
-      }
+      );
     }
 
     const product = new Product({
@@ -876,17 +875,16 @@ exports.addColorAndItsSizeVariant = async (req, res) => {
     })
 
     let imageUrlArr = [];
-    if (images?.length >= 1) {
-      for (var i = 0; i < images?.length; i++) {
-        //convert each image to webp with quality 40%
-        const webpImageBuffer = await sharp(images[i].buffer)
-          .webp([{ near_lossless: true }, { quality: 40 }])
-          .toBuffer();
+    if (images?.length > 0) {
+      imageUrlArr = await Promise.all(
+        images.map(async (image) => {
+          const webpImageBuffer = await sharp(image.buffer)
+            .webp([{ near_lossless: true }, { quality: 40 }])
+            .toBuffer();
 
-        await uploadTos3(webpImageBuffer).then((result) => {
-          imageUrlArr.push(result);
+          return await uploadTos3(webpImageBuffer);
         })
-      }
+      );
     }
 
     const color_variant = new ColorVariant({

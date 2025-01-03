@@ -16,7 +16,7 @@ const colorVariantSchema = new mongoose.Schema({
             required: true,
         },
     },
-    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product',index:true },
 },
     {
         timestamps: true, // Automatically add createdAt and updatedAt fields
@@ -30,11 +30,11 @@ colorVariantSchema.virtual('images', {
     localField: '_id',
     foreignField: 'colorVariant',
 })
+
 colorVariantSchema.virtual('sizevariants', {
     ref: 'SizeVariant',
     localField: '_id',
     foreignField: 'colorVariant',
 })
-
 
 module.exports = mongoose.model('ColorVariant', colorVariantSchema);

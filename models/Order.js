@@ -16,6 +16,7 @@ const orderSchema = new mongoose.Schema({
         required: true,
         enum: ['ORDERED', 'PROCESSED', 'CANCELLED', 'TRANSIT', 'DELIVERED'],
         default: 'ORDERED',
+        index: true,
     },
     name: {
         type: String,
@@ -68,11 +69,13 @@ const orderSchema = new mongoose.Schema({
     },
     payment: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
     // deliveredAt: {type:Date,} this property needs to be added
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', index: true },
     address: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
     item: { type: mongoose.Schema.Types.ObjectId, ref: 'Item' },
 }, {
     timestamps: true, // Automatically add createdAt and updatedAt fields
 });
+
+orderSchema.index({ customer: 1, status: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);

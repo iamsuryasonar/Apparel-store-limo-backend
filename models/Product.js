@@ -31,6 +31,7 @@ const productSchema = new mongoose.Schema({
     isPublished: {
         type: Boolean,
         default: false,
+        index: true,
     },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
 },
@@ -47,5 +48,7 @@ productSchema.virtual('colorvariants', {
     foreignField: 'product',
 })
 
+productSchema.index({ tag: 1, isPublished: 1 });
+productSchema.index({ category: 1, isPublished: 1 });
 
 module.exports = mongoose.model('Product', productSchema);

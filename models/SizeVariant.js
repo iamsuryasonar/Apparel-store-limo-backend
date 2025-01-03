@@ -28,7 +28,7 @@ const sizeVariantSchema = new mongoose.Schema({
         enum: ['IN-STOCK', 'OUT-STOCK'],
         default: 'IN-STOCK',
     },
-    colorVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'ColorVariant' }
+    colorVariant: { type: mongoose.Schema.Types.ObjectId, ref: 'ColorVariant', index: true }
 }, {
     timestamps: true, // Automatically add createdAt and updatedAt fields
 });

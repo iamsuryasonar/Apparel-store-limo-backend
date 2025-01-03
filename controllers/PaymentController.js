@@ -19,7 +19,7 @@ exports.createPaymentOrder = async (req, res) => {
         let total_amount = 0;
 
         for (const item of cartItems) {
-            const sizevariant = await SizeVariant.findById({ _id: item.sizevariant });
+            const sizevariant = await SizeVariant.findById(item.sizevariant);
             let amount = sizevariant.selling_price * item.quantity;
             total_amount = total_amount + amount;
         }

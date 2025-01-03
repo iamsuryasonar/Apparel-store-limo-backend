@@ -8,5 +8,6 @@ const PRODUCT_TAG = ['Popular', 'Most purchased', 'New arrival'];
 
 module.exports = {
     FILTER_ITEMS,
-    ORDER_STATUS
+    ORDER_STATUS,
+    PRODUCT_TAG
 }

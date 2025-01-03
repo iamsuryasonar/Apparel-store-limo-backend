@@ -14,9 +14,11 @@ const itemSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-   
+
 }, {
     timestamps: true, // Automatically add createdAt and updatedAt fields
 });
+
+itemSchema.index({ customer: 1, isOrdered: 1 });
 
 module.exports = mongoose.model('Item', itemSchema);
