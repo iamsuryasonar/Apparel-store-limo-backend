@@ -10,7 +10,8 @@ const sharp = require('sharp');
 
 exports.getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find().lean();
+        const categories = await Category.find({ isActive: true });
+        
         res.status(200).json(success("OK", categories, res.statusCode));
     } catch (err) {
         console.error(err);
@@ -58,11 +59,11 @@ exports.addCategory = async (req, res) => {
         await session.commitTransaction();
         session.endSession();
 
-        res.status(201).json(success("OK", {
+        res.status(201).json(success("OK",{
             categories
         },
-            res.statusCode),
-        );
+            res.statusCode
+        ));
     } catch (err) {
         console.error(err);
         await session.abortTransaction();
