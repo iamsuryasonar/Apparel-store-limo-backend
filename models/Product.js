@@ -36,7 +36,7 @@ const productSchema = new mongoose.Schema({
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
 },
     {
-        timestamps: true, // Automatically add createdAt and updatedAt fields
+        timestamps: true,
         toJSON: { virtuals: true },
         toObject: { virtuals: true },
     }
@@ -46,6 +46,13 @@ productSchema.virtual('colorvariants', {
     ref: 'ColorVariant',
     localField: '_id',
     foreignField: 'product',
+})
+
+productSchema.virtual('reviews', {
+    ref: 'Review',
+    localField: '_id',
+    foreignField: 'product',
+    match: { isActive: true }
 })
 
 productSchema.index({ tag: 1, isPublished: 1 });

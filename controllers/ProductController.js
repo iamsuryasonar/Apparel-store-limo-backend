@@ -86,6 +86,7 @@ exports.getProductById = async (req, res) => {
 // @access  Public
 
 exports.getAllPublishedProducts = async (req, res) => {
+
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
@@ -230,6 +231,7 @@ exports.getPublishedProductById = async (req, res) => {
 
     const product = await Product.findOne({ _id: id, isPublished: true })
       .populate('category')
+      .populate('reviews')
       .populate({
         path: 'colorvariants',
         populate: ['images', 'sizevariants']

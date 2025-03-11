@@ -128,6 +128,7 @@ exports.customerLogIn = async (req, res) => {
     const token = jwt.sign({ _id: customer._id, role: customer.role, exp: Math.floor(Date.now() / 1000) + 10 * 24 * 3600, }, config.jwt.tokenSecret)
 
     const userinfo = {
+      '_id': customer._id,
       'firstName': customer.firstName,
       'lastName': customer.lastName,
       'email': customer.email,

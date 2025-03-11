@@ -3,7 +3,6 @@ const mongoose = require('mongoose')
 const bodyParser = require('body-parser');
 let cors = require('cors')
 require('dotenv').config();
-const https = require('https');
 const config = require('./config');
 const cluster = require('node:cluster');
 const numOfCPU = require('node:os').availableParallelism();
@@ -26,7 +25,18 @@ app.options('*', cors(corsOptions));
 //     next();
 // });
 
-const { auth_route, product_route, cart_route, order_route, category_route, address_route, payment_route, analytics_route, contact_us_route } = require('./routes');
+const {
+    auth_route,
+    product_route,
+    cart_route,
+    order_route,
+    category_route,
+    address_route,
+    payment_route,
+    analytics_route,
+    contact_us_route,
+    review_route,
+} = require('./routes');
 
 app.use(express.json());
 
@@ -38,6 +48,7 @@ const mongooseOptions = {
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 60000,
 };
+
 mongoose.set("strictQuery", false);
 // Connect to the MongoDB server
 mongoose.connect(config.mongo.uri, mongooseOptions)
@@ -71,6 +82,7 @@ app.use('/api/v1/address', address_route);
 app.use('/api/v1/payment', payment_route);
 app.use('/api/v1/analytics', analytics_route);
 app.use('/api/v1/contact-us', contact_us_route);
+app.use('/api/v1/review', review_route);
 
 app.get('/', (req, res) => {
     res.send('Hello World!')

@@ -7,6 +7,7 @@ const AddressController = require('./AddressController');
 const PaymentController = require('./PaymentController');
 const AnalyticsController = require('./AnalyticsController');
 const ContactUsController = require('./ContactUsController');
+const ReviewController = require('./ReviewController');
 
 module.exports = {
     AuthController,
@@ -17,5 +18,6 @@ module.exports = {
     AddressController,
     PaymentController,
     AnalyticsController,
-    ContactUsController
+    ContactUsController,
+    ReviewController,
 }
