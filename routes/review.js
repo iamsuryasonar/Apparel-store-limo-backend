@@ -3,6 +3,7 @@ const router = express.Router();
 const { ReviewController } = require('../controllers');
 const authMiddleware = require('../middlewares/authMiddleware')
 
+router.get('/:productId', ReviewController.getReview);
 router.post('/', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), ReviewController.addReview);
 router.put('/:id', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), ReviewController.updateReview);
 router.delete('/:id', authMiddleware.authenticate, authMiddleware.restrictTo('CUSTOMER'), ReviewController.deleteReview);

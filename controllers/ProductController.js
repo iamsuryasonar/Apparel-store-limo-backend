@@ -231,7 +231,6 @@ exports.getPublishedProductById = async (req, res) => {
 
     const product = await Product.findOne({ _id: id, isPublished: true })
       .populate('category')
-      .populate('reviews')
       .populate({
         path: 'colorvariants',
         populate: ['images', 'sizevariants']

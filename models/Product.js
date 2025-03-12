@@ -33,6 +33,14 @@ const productSchema = new mongoose.Schema({
         default: false,
         index: true,
     },
+    reviewCount: {
+        type: Number,
+        default: 0,
+    },
+    totalRating: {
+        type: Number,
+        default: 0,
+    },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
 },
     {
@@ -46,13 +54,6 @@ productSchema.virtual('colorvariants', {
     ref: 'ColorVariant',
     localField: '_id',
     foreignField: 'product',
-})
-
-productSchema.virtual('reviews', {
-    ref: 'Review',
-    localField: '_id',
-    foreignField: 'product',
-    match: { isActive: true }
 })
 
 productSchema.index({ tag: 1, isPublished: 1 });
